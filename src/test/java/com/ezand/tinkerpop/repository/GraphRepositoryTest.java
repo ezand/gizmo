@@ -1,4 +1,4 @@
-package com.ezand.tinkerpop.repository.helpers;
+package com.ezand.tinkerpop.repository;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;

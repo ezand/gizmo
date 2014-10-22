@@ -1,8 +1,7 @@
 package com.ezand.tinkerpop.repository.mapper;
 
-import static com.ezand.tinkerpop.repository.Configuration.PROPERTY_INSTANCE_RESOLVER;
-import static com.ezand.tinkerpop.repository.Exceptions.beanInfoException;
-import static com.ezand.tinkerpop.repository.Exceptions.invalidOrMissingJavaClassInformation;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.beanInfoException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.invalidOrMissingJavaClassInformation;
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.createInstance;
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.invokeBeanMethod;
 
@@ -17,7 +16,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.XSlf4j;
 
-import com.ezand.tinkerpop.repository.Configuration;
+import com.ezand.tinkerpop.repository.configuration.GlobalConfiguration;
+import com.ezand.tinkerpop.repository.configuration.MapperConfiguration;
 import com.ezand.tinkerpop.repository.resolver.InstanceResolver;
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.google.common.collect.Lists;
@@ -27,10 +27,12 @@ import com.tinkerpop.gremlin.structure.Element;
 
 @XSlf4j
 public class BeanMapper {
+    private final MapperConfiguration configuration;
     private final InstanceResolver instanceResolver;
 
     public BeanMapper() {
-        instanceResolver = createInstance(Configuration.getProperty(PROPERTY_INSTANCE_RESOLVER), InstanceResolver.class);
+        this.configuration = new GlobalConfiguration();
+        this.instanceResolver = createInstance(configuration.getInstanceResolverClass());
     }
 
     @SuppressWarnings("unchecked")

@@ -1,6 +1,6 @@
 package com.ezand.tinkerpop.repository.resolver;
 
-import static com.ezand.tinkerpop.repository.Exceptions.argumentCountMistmatchException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.argumentCountMismatchException;
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.createInstance;
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getArguments;
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getConstructor;
@@ -19,7 +19,7 @@ public class ImmutableInstanceResolver implements InstanceResolver {
         ConstructorProperties constructorProperties = getConstructorProperties(constructor);
         Object[] constructorArguments = getArguments(properties, constructorProperties);
         if (constructorArguments.length != constructor.getParameterCount()) {
-            throw argumentCountMistmatchException(constructorArguments.length, constructor.getParameterCount());
+            throw argumentCountMismatchException(constructorArguments.length, constructor.getParameterCount());
         }
         return createInstance(constructor, constructorArguments);
     }

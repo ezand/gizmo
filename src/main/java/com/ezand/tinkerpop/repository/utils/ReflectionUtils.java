@@ -1,9 +1,14 @@
 package com.ezand.tinkerpop.repository.utils;
 
-import static com.ezand.tinkerpop.repository.Exceptions.instantiationException;
-import static com.ezand.tinkerpop.repository.Exceptions.methodInvocationException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.beanDescriptorException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.classLoadingException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.instantiationException;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.methodInvocationException;
 
 import java.beans.ConstructorProperties;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -45,16 +50,23 @@ public class ReflectionUtils {
         try {
             return method.invoke(bean, arguments);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw methodInvocationException(bean, method);
+            throw methodInvocationException(method, bean, arguments);
         }
     }
 
-    @SuppressWarnings({"unchecked", "UnusedParameters"})
-    public static <T> T createInstance(String className, Class<T> clazz) {
+    public static Object createInstance(String className) {
         try {
-            return (T) Class.forName(className).newInstance();
-        } catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
+            return loadClass(className).newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
             throw instantiationException(className);
+        }
+    }
+
+    public static <T> T createInstance(Class<T> clazz) {
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw instantiationException(clazz);
         }
     }
 
@@ -63,6 +75,22 @@ public class ReflectionUtils {
             return constructor.newInstance(arguments);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw instantiationException(constructor.getDeclaringClass().getName());
+        }
+    }
+
+    public static <B extends GraphElement> PropertyDescriptor[] getPropertyDescriptors(Class<B> beanClass) {
+        try {
+            return Introspector.getBeanInfo(beanClass).getPropertyDescriptors();
+        } catch (IntrospectionException e) {
+            throw beanDescriptorException(beanClass);
+        }
+    }
+
+    public static Class<?> loadClass(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw classLoadingException(className);
         }
     }
 }
