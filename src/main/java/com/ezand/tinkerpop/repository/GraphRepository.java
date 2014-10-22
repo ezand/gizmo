@@ -21,7 +21,7 @@ public abstract class GraphRepository<B extends GraphElement<ID>, ID> implements
 
     protected GraphRepository(Graph graph) {
         this.graph = graph;
-        this.mapper = new BeanMapper();
+        this.mapper = new BeanMapper(graph.features());
         this.beanClass = new TypeToken<B>(getClass()) {
         }.getRawType();
     }

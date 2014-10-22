@@ -6,16 +6,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import com.ezand.tinkerpop.repository.structure.GraphElement;
-import com.tinkerpop.gremlin.structure.Element;
 
 public class Exceptions {
-    public static RuntimeException invalidOrMissingJavaClassInformation(Element element) {
-        return new RuntimeException(format("Unable to resolve java class information from graph element label '%s'", element.label()));
-    }
-
-    public static <B extends GraphElement> RuntimeException beanInfoException(B bean) {
-        return new RuntimeException(format("An error occurred while getting bean info for bean '%s'", bean.getClass().getName()));
-    }
 
     public static <T> RuntimeException instantiationException(Class<T> clazz) {
         return new RuntimeException(format("An error occurred while trying to create instance of class '%s'", clazz));

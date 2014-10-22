@@ -26,7 +26,7 @@ public class GraphRepositoryTest {
 
     @Test
     public void should_find_by_id() {
-        String animalShelterName = "My awsome shelter";
+        String animalShelterName = "My awesome shelter";
         Vertex vertex = graph.addVertex(T.label, AnimalShelter.class.getName(), "name", animalShelterName);
         AnimalShelter animalShelter = repository.find((long) vertex.id());
 
@@ -35,8 +35,12 @@ public class GraphRepositoryTest {
         assertThat(animalShelter.getName(), equalTo(animalShelterName));
     }
 
-//    @Test
-//    public void bar() {
-//        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awsome shelter"));
-//    }
+    @Test
+    public void should_save_new_bean() {
+        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awesome shelter"));
+
+        assertThat(animalShelter, notNullValue());
+        assertThat(animalShelter.getId(), notNullValue());
+        assertThat(animalShelter.getName(), equalTo("My awesome shelter"));
+    }
 }
