@@ -62,7 +62,7 @@ public abstract class GraphRepository<B extends GraphElement<ID>, ID> implements
 
     @Override
     public B save(B bean) {
-        if (bean.getId() != null) {
+        if (isExistingBean(bean)) {
             return update(bean);
         }
 
@@ -116,5 +116,9 @@ public abstract class GraphRepository<B extends GraphElement<ID>, ID> implements
                 .filter(e -> e instanceof Vertex)
                 .map(e -> (B) mapper.mapToBean(e))
                 .collect(Collectors.toSet());
+    }
+
+    protected boolean isExistingBean(B bean) {
+        return bean.getId() != null && graph.v(bean.getId()).count().next() > 0;
     }
 }
