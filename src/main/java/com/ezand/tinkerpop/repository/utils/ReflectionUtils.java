@@ -39,7 +39,7 @@ public class ReflectionUtils {
                 .filter(c -> c.getDeclaredAnnotation(annotationClass) != null)
                 .distinct()
                 .findFirst()
-                .get();
+                .orElseThrow(RuntimeException::new);
     }
 
     public static <B extends GraphElement> ConstructorProperties getConstructorProperties(Constructor<B> constructor) {
