@@ -34,4 +34,9 @@ public class GraphRepositoryTest {
         assertThat(animalShelter.getId(), notNullValue());
         assertThat(animalShelter.getName(), equalTo(animalShelterName));
     }
+
+//    @Test
+//    public void bar() {
+//        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awsome shelter"));
+//    }
 }

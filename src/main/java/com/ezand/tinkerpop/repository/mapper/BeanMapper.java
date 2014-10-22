@@ -1,63 +1,81 @@
 package com.ezand.tinkerpop.repository.mapper;
 
+import static com.ezand.tinkerpop.repository.Configuration.PROPERTY_INSTANCE_RESOLVER;
+import static com.ezand.tinkerpop.repository.Exceptions.beanInfoException;
 import static com.ezand.tinkerpop.repository.Exceptions.invalidOrMissingJavaClassInformation;
-import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getConstructor;
-import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getConstructorArguments;
-import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getConstructorProperties;
+import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.createInstance;
+import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.invokeBeanMethod;
 
-import java.beans.BeanDescriptor;
 import java.beans.BeanInfo;
-import java.beans.ConstructorProperties;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.XSlf4j;
 
+import com.ezand.tinkerpop.repository.Configuration;
+import com.ezand.tinkerpop.repository.resolver.InstanceResolver;
 import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.tinkerpop.gremlin.structure.Element;
 
 @XSlf4j
 public class BeanMapper {
+    private final InstanceResolver instanceResolver;
+
+    public BeanMapper() {
+        instanceResolver = createInstance(Configuration.getProperty(PROPERTY_INSTANCE_RESOLVER), InstanceResolver.class);
+    }
+
     @SuppressWarnings("unchecked")
-    public static <B extends GraphElement> B mapToBean(Element element) {
+    public <B extends GraphElement> B mapToBean(Element element) {
         if (element == null) {
             log.warn("Graph element was null, so will return null as well");
             return null;
         }
 
-        try {
-            Class<B> beanClass = getBeanClass(element);
-            Constructor<B> constructor = getConstructor(beanClass, ConstructorProperties.class);
-            ConstructorProperties constructorProperties = getConstructorProperties(constructor);
-            Object[] constructorArguments = getConstructorArguments(element, constructorProperties);
+        Class<B> beanClass = getBeanClass(element);
 
-            return constructor.newInstance(constructorArguments);
-        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
-            log.error("An error occurred while creating bean instance of graph element properties", e);
-            throw invalidOrMissingJavaClassInformation(element); // TODO
-        }
+        Map<String, Object> properties = Maps.asMap(element.keys(), element::property)
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().isPresent())
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().value()));
+        properties.put("id", element.id());
+
+        return instanceResolver.resolve(beanClass, properties);
     }
 
-
-    public static <B extends GraphElement> Object[] mapToVertex(B bean, String label) {
+    public <B extends GraphElement> Object[] mapToKeyValues(B bean, String label) {
         try {
+            Set<String> ignoredProperties = Sets.newHashSet("class", "id");
+
+            // TODO check if id assignment is allowed by graph
+            // TODO map to key value array
+            // TODO add java class as property
+            List<Object> arguments = Lists.newArrayList();
             BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
-            BeanDescriptor beanDescriptor = beanInfo.getBeanDescriptor();
+            Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> !ignoredProperties.contains(pd.getName()))
+                    .forEach(pd -> {
+                        arguments.add(pd.getName());
+                        arguments.add(invokeBeanMethod(bean, pd.getReadMethod()));
+                    });
 
+            return arguments.toArray();
         } catch (IntrospectionException e) {
-            e.printStackTrace(); // TODO
+            throw beanInfoException(bean);
         }
-
-
-        // TODO map to key value array
-        // TODO add java class as property
-        return null;
     }
 
     @SuppressWarnings("unchecked")
-    public static <B extends GraphElement> Class<B> getBeanClass(Element element) {
+    public <B extends GraphElement> Class<B> getBeanClass(Element element) {
         try {
             return (Class<B>) Class.forName(element.label());
         } catch (ClassNotFoundException e) {
