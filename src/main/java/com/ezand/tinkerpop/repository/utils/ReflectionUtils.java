@@ -21,7 +21,7 @@ import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.google.common.collect.Lists;
 
 public class ReflectionUtils {
-    public static Object[] getArguments(Map<String, Object> properties, ConstructorProperties constructorProperties) {
+    public static Object[] getConstructorArguments(Map<String, Object> properties, ConstructorProperties constructorProperties) {
         List<Object> arguments = Lists.newArrayList();
         Arrays.stream(constructorProperties.value())
                 .forEach(key -> {
