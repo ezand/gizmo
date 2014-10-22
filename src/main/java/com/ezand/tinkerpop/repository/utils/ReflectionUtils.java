@@ -16,19 +16,19 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.google.common.collect.Lists;
 
 public class ReflectionUtils {
-    public static Object[] getConstructorArguments(Map<String, Object> properties, ConstructorProperties constructorProperties) {
+    public static Object[] getConstructorArguments(Map<String, Optional<?>> properties, ConstructorProperties constructorProperties) {
         List<Object> arguments = Lists.newArrayList();
         Arrays.stream(constructorProperties.value())
                 .forEach(key -> {
-                    Object value = properties.get(key);
-                    if (value != null) {
-                        arguments.add(value);
-                    }
+                    Optional<?> optional = properties.get(key);
+                    arguments.add(optional != null ? optional.orElse(null) : null);
                 });
         return arguments.toArray();
     }
@@ -80,7 +80,10 @@ public class ReflectionUtils {
 
     public static <B extends GraphElement> PropertyDescriptor[] getPropertyDescriptors(Class<B> beanClass) {
         try {
-            return Introspector.getBeanInfo(beanClass).getPropertyDescriptors();
+            List<PropertyDescriptor> propertyDescriptors = Arrays.stream(Introspector.getBeanInfo(beanClass).getPropertyDescriptors())
+                    .filter(pd -> !pd.getName().equals("class"))
+                    .collect(Collectors.toList());
+            return propertyDescriptors.toArray(new PropertyDescriptor[propertyDescriptors.size()]);
         } catch (IntrospectionException e) {
             throw beanDescriptorException(beanClass);
         }

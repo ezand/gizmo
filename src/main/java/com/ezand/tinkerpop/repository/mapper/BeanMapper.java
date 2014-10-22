@@ -6,9 +6,12 @@ import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.invokeBeanMet
 import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.loadClass;
 import static com.tinkerpop.gremlin.structure.Graph.Features;
 
+import java.beans.FeatureDescriptor;
+import java.beans.PropertyDescriptor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,12 +48,15 @@ public class BeanMapper {
 
         Class<B> beanClass = getBeanClass(element);
 
-        Map<String, Object> properties = Maps.asMap(element.keys(), element::property)
+        PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(beanClass);
+        Set<String> propertyNames = Arrays.stream(propertyDescriptors).map(FeatureDescriptor::getName).collect(Collectors.toSet());
+
+        Map<String, Optional<?>> properties = Maps.toMap(propertyNames, element::property)
                 .entrySet()
                 .stream()
-                .filter(e -> e.getValue().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().value()));
-        properties.put("id", element.id());
+                .filter(e -> e != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().isPresent() ? Optional.of(e.getValue().value()) : Optional.empty()));
+        properties.put("id", Optional.of(element.id()));
 
         return instanceResolver.resolve(beanClass, properties);
     }
@@ -68,8 +74,11 @@ public class BeanMapper {
         Arrays.stream(getPropertyDescriptors(bean.getClass()))
                 .filter(pd -> !ignoredProperties.contains(pd.getName()))
                 .forEach(pd -> {
-                    arguments.add(pd.getName());
-                    arguments.add(invokeBeanMethod(bean, pd.getReadMethod()));
+                    Object value = invokeBeanMethod(bean, pd.getReadMethod());
+                    if (value != null) {
+                        arguments.add(pd.getName());
+                        arguments.add(value);
+                    }
                 });
 
         arguments.add(T.label);

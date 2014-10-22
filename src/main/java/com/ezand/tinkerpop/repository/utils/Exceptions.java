@@ -18,7 +18,7 @@ public class Exceptions {
     }
 
     public static RuntimeException argumentCountMismatchException(int actual, int expected) {
-        return new RuntimeException(format("Provided augment count %s does not match expected %s", actual, expected));
+        return new RuntimeException(format("Provided argument count %s does not match expected %s", actual, expected));
     }
 
     public static RuntimeException methodInvocationException(Method method, Object instance, Object... arguments) {

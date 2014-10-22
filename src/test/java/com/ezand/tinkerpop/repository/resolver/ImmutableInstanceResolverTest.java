@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -19,9 +20,9 @@ public class ImmutableInstanceResolverTest {
 
     @Test
     public void should_resolve_instance() throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-            put("name", MY_AWESOME_SHELTER);
+        Map<String, Optional<?>> properties = new HashMap<String, Optional<?>>() {{
+            put("id", Optional.of(Long.MAX_VALUE));
+            put("name", Optional.of(MY_AWESOME_SHELTER));
         }};
         AnimalShelter animalShelter = resolver.resolve(AnimalShelter.class, properties);
 
@@ -32,19 +33,11 @@ public class ImmutableInstanceResolverTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void should_not_resolve_instance_when_missing_an_argument() throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-        }};
-        resolver.resolve(AnimalShelter.class, properties);
-    }
-
-    @Test(expected = RuntimeException.class)
     public void should_not_resolve_mutable_bean() throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-            put("name", "Doggy");
-            put("bread", "Black Shepard");
+        Map<String, Optional<?>> properties = new HashMap<String, Optional<?>>() {{
+            put("id", Optional.of(Long.MAX_VALUE));
+            put("name", Optional.of("Doggy"));
+            put("bread", Optional.of("Black Shepard"));
         }};
         resolver.resolve(MutableDog.class, properties);
     }

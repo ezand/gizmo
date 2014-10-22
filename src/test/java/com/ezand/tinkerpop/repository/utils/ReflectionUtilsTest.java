@@ -11,12 +11,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.beans.ConstructorProperties;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -39,20 +41,21 @@ public class ReflectionUtilsTest {
     }
 
     @Test
-    public void should_get_arguments() throws Exception {
+    public void should_get_constructor_arguments() throws Exception {
         Constructor<AnimalShelter> constructor = getConstructor(AnimalShelter.class, ConstructorProperties.class);
         ConstructorProperties constructorProperties = getConstructorProperties(constructor);
         Object[] arguments = getConstructorArguments(getArgumentMap(), constructorProperties);
 
         assertThat(arguments, notNullValue());
-        assertThat(arguments.length, equalTo(2));
+        assertThat(arguments.length, equalTo(3));
         assertThat(arguments[0], equalTo(Long.MAX_VALUE));
         assertThat(arguments[1], equalTo(MY_SHELTER));
+        assertThat(arguments[2], nullValue());
     }
 
     @Test
     public void should_invoke_bean_method() throws Exception {
-        AnimalShelter animalShelter = new AnimalShelter(null, MY_SHELTER);
+        AnimalShelter animalShelter = new AnimalShelter(null, MY_SHELTER, null);
         Object name = invokeBeanMethod(animalShelter, AnimalShelter.class.getDeclaredMethod("getName"));
 
         assertThat(name, notNullValue());
@@ -91,10 +94,10 @@ public class ReflectionUtilsTest {
         loadClass("non.existing.ClassName");
     }
 
-    private Map<String, Object> getArgumentMap() {
-        return new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-            put("name", MY_SHELTER);
+    private Map<String, Optional<?>> getArgumentMap() {
+        return new HashMap<String, Optional<?>>() {{
+            put("id", Optional.of(Long.MAX_VALUE));
+            put("name", Optional.of(MY_SHELTER));
         }};
     }
 }

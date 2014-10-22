@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ezand.tinkerpop.repository.helpers.beans.AnimalShelter;
@@ -37,7 +38,7 @@ public class GraphRepositoryTest {
 
     @Test
     public void should_save_new_bean() {
-        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awesome shelter"));
+        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awesome shelter", null));
 
         assertThat(animalShelter, notNullValue());
         assertThat(animalShelter.getId(), notNullValue());

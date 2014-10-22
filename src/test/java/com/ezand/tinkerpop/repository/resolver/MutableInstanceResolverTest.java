@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -20,10 +21,11 @@ public class MutableInstanceResolverTest {
 
     @Test
     public void should_resolve_instance() throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-            put("name", AWESOME_DOG);
-            put("bread", FLAT_COATED_RETRIEVER);
+        Map<String, Optional<?>> properties = new HashMap<String, Optional<?>>() {{
+            put("id", Optional.of(Long.MAX_VALUE));
+            put("name", Optional.of(AWESOME_DOG));
+            put("animals", Optional.empty());
+            put("bread", Optional.of(FLAT_COATED_RETRIEVER));
         }};
         MutableDog dog = resolver.resolve(MutableDog.class, properties);
 
@@ -36,9 +38,10 @@ public class MutableInstanceResolverTest {
 
     @Test(expected = RuntimeException.class)
     public void should_not_resolve_immutable_bean() throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>() {{
-            put("id", Long.MAX_VALUE);
-            put("name", "The shelter shack");
+        Map<String, Optional<?>> properties = new HashMap<String, Optional<?>>() {{
+            put("id", Optional.of(Long.MAX_VALUE));
+            put("name", Optional.of("The shelter shack"));
+            put("animals", Optional.empty());
         }};
         resolver.resolve(AnimalShelter.class, properties);
     }

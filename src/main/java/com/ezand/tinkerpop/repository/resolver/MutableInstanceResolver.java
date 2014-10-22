@@ -7,21 +7,21 @@ import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.invokeBeanMet
 import java.beans.PropertyDescriptor;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 
 public class MutableInstanceResolver implements InstanceResolver {
     @Override
-    public <B extends GraphElement> B resolve(Class<B> beanClass, Map<String, Object> properties) {
+    public <B extends GraphElement> B resolve(Class<B> beanClass, Map<String, Optional<?>> properties) {
         B instance = createInstance(beanClass);
 
         PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(beanClass);
         Arrays.stream(propertyDescriptors)
                 .forEach(pd -> {
-                    Object value = properties.get(pd.getName());
-                    if (value != null) {
-                        invokeBeanMethod(instance, pd.getWriteMethod(), value);
-                    }
+                    Optional<?> optional = properties.get(pd.getName());
+                    Object value = optional != null ? optional.orElse(null) : null;
+                    invokeBeanMethod(instance, pd.getWriteMethod(), value);
                 });
 
         return instance;

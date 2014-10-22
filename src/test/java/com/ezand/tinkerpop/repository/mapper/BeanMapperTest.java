@@ -65,7 +65,7 @@ public class BeanMapperTest {
 
     @Test
     public void should_map_to_key_values() throws Exception {
-        AnimalShelter animalShelter = new AnimalShelter(null, MY_AWESOME_SHELTER);
+        AnimalShelter animalShelter = new AnimalShelter(null, MY_AWESOME_SHELTER, null);
         Object[] keyValues = mapper.mapToKeyValues(animalShelter, AnimalShelter.class.getName());
 
         assertThat(keyValues, notNullValue());
@@ -79,7 +79,7 @@ public class BeanMapperTest {
 
     private boolean arrayContains(Object[] array, Object value) {
         return Arrays.stream(array)
-                .filter(o -> o.equals(value))
+                .filter(value::equals)
                 .count() > 0;
     }
 
