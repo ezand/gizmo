@@ -17,7 +17,7 @@ import com.tinkerpop.gremlin.structure.Vertex;
 public abstract class GraphRepository<B extends GraphElement<ID>, ID> implements CRUDRespository<B, ID> {
     protected final Graph graph;
     protected final BeanMapper mapper;
-    private final Class<? super B> beanClass;
+    protected final Class<? super B> beanClass;
 
     protected GraphRepository(Graph graph) {
         this.graph = graph;
