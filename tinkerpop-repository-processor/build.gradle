@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':tinkerpop-repository-core')
+    compile project(':tinkerpop-repository-ast')
+    compile files('../lib/spi-0.2.7-SNAPSHOT.jar')
+
+    if (isOSX()) {
+        compile files("${System.properties['java.home']}/../lib/tools.jar")
+    }
+}

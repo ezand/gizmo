@@ -1,2 +1,3 @@
 rootProject.name = 'tinkerpop-repository'
 
+include 'tinkerpop-repository-core', 'tinkerpop-repository-processor', 'tinkerpop-repository-ast', 'tinkerpop-repository-test'
