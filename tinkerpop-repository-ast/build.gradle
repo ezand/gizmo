@@ -1,4 +1,6 @@
 dependencies {
+    compile project(':tinkerpop-repository-core')
+
     if (isOSX()) {
         compile files("${System.properties['java.home']}/../lib/tools.jar")
     }

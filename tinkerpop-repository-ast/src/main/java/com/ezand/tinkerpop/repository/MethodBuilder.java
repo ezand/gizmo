@@ -1,5 +1,6 @@
 package com.ezand.tinkerpop.repository;
 
+import static com.ezand.tinkerpop.repository.ASTUtil.typed;
 import static com.sun.tools.javac.tree.JCTree.JCBlock;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
 import static com.sun.tools.javac.tree.JCTree.JCMethodDecl;
@@ -35,6 +36,7 @@ public class MethodBuilder {
     private List<JCTypeParameter> typeParameters;
     private List<JCVariableDecl> parameters;
     private String returnType;
+    private List<Class<?>> returnTypeTypeArgs;
     private boolean returnTypeArray;
     private List<JCExpression> thrown;
     private JCExpression defaultValue;
@@ -56,6 +58,10 @@ public class MethodBuilder {
             } else {
                 returnTypeExpression = chainDotsString(typeNode, returnType);
             }
+        }
+
+        if (returnTypeTypeArgs != null && !returnTypeTypeArgs.isEmpty()) {
+            returnTypeExpression = typed(typeNode, returnTypeExpression, returnTypeTypeArgs.toArray(new Class[returnTypeTypeArgs.size()]));
         }
 
         return recursiveSetGeneratedBy(

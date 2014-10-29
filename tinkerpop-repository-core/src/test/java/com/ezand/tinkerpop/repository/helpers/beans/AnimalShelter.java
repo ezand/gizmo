@@ -2,6 +2,7 @@ package com.ezand.tinkerpop.repository.helpers.beans;
 
 import static com.tinkerpop.gremlin.structure.Direction.IN;
 
+import java.util.Map;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
@@ -10,15 +11,22 @@ import lombok.NoArgsConstructor;
 
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.ezand.tinkerpop.repository.structure.Relationship;
+import com.google.common.collect.Maps;
 import com.tinkerpop.gremlin.structure.Element;
-import com.tinkerpop.gremlin.structure.Property;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AnimalShelter implements GraphElement<AnimalShelter, Long> {
+public class AnimalShelter implements GraphElement<Long> {
+    private final Map<String, Object> changes = Maps.newHashMap();
+    private Element element;
+
     Long id;
     String name;
+
+    public AnimalShelter(Element element) {
+        this.element = element;
+    }
 
     @Relationship(label = "inhabits", direction = IN)
     Set<Animal> animals;
@@ -36,9 +44,12 @@ public class AnimalShelter implements GraphElement<AnimalShelter, Long> {
     }
 
     @Override
-    public void $applyElement(Element element) {
-        Property name = element.property("name");
-        this.name = name.isPresent() ? (String) name.value() : null;
-        this.id = (Long) element.id();
+    public Map<String, Object> $getPropertyChanges() {
+        return changes;
+    }
+
+    @Override
+    public Element $getElement() {
+        return this.element;
     }
 }

@@ -1,8 +1,11 @@
 package com.ezand.tinkerpop.repository;
 
+import static com.ezand.tinkerpop.repository.Names.CONSTRUCTOR_NAME;
 import static com.ezand.tinkerpop.repository.Names.splitNameOf;
+import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.getDefaultValue;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
+import static com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import static com.sun.tools.javac.tree.JCTree.JCNewClass;
 import static com.sun.tools.javac.tree.JCTree.JCTypeApply;
 import static com.sun.tools.javac.tree.JCTree.JCVariableDecl;
@@ -11,8 +14,11 @@ import static com.tinkerpop.gremlin.util.StreamFactory.stream;
 import static java.util.stream.Collectors.toSet;
 import static lombok.core.AST.Kind.FIELD;
 import static lombok.core.AST.Kind.METHOD;
+import static lombok.javac.Javac.CTC_BOT;
+import static lombok.javac.Javac.isPrimitive;
 import static lombok.javac.handlers.JavacHandlerUtil.MemberExistsResult.NOT_EXISTS;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDots;
+import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
 import static lombok.javac.handlers.JavacHandlerUtil.toGetterName;
 import static lombok.javac.handlers.JavacHandlerUtil.toSetterName;
 
@@ -68,6 +74,12 @@ public class ASTUtil {
                 .collect(toSet());
     }
 
+    public static Set<JavacNode> getConstructors(JavacNode typeNode) {
+        return stream(typeNode.down())
+                .filter(n -> n.getKind().equals(METHOD) && n.getName().equals(CONSTRUCTOR_NAME))
+                .collect(toSet());
+    }
+
     public static JavacNode findGetter(JavacNode typeNode, JavacNode fieldNode) {
         return getMethods(typeNode)
                 .stream()
@@ -110,5 +122,22 @@ public class ASTUtil {
         return List.from(Arrays.stream(classes)
                 .map(c -> chainDots(typeNode, splitNameOf(c)))
                 .collect(Collectors.toList()));
+    }
+
+    public static JCExpression getDefaultASTValue(JavacNode fieldNode) {
+        JavacTreeMaker maker = fieldNode.getTreeMaker();
+        JCVariableDecl fieldDeclaration = (JCVariableDecl) fieldNode.get();
+        String fieldType = fieldDeclaration.vartype.type.toString();
+
+        Object defaultValue = getDefaultValue(fieldType, isPrimitive(fieldDeclaration.vartype));
+        if (defaultValue == null) {
+            return maker.Literal(CTC_BOT, null);
+        } else {
+            return maker.Literal(defaultValue);
+        }
+    }
+
+    public static JCFieldAccess getThisField(JavacNode typeNode, String fieldName) {
+        return typeNode.getTreeMaker().Select(chainDotsString(typeNode, "this"), typeNode.toName(fieldName));
     }
 }

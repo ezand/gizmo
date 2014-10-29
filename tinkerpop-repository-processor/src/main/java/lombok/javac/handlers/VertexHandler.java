@@ -3,21 +3,27 @@ package lombok.javac.handlers;
 import static com.ezand.tinkerpop.repository.ASTUtil.findSetter;
 import static com.ezand.tinkerpop.repository.ASTUtil.getAccessorFields;
 import static com.ezand.tinkerpop.repository.ASTUtil.getAnnotationParameterValue;
+import static com.ezand.tinkerpop.repository.ASTUtil.getDefaultASTValue;
 import static com.ezand.tinkerpop.repository.ASTUtil.getFields;
+import static com.ezand.tinkerpop.repository.ASTUtil.getThisField;
 import static com.ezand.tinkerpop.repository.ASTUtil.getterExists;
 import static com.ezand.tinkerpop.repository.FieldBuilder.newField;
 import static com.ezand.tinkerpop.repository.MethodBuilder.newMethod;
 import static com.ezand.tinkerpop.repository.Names.ANNOTATION_PARAMETER_NAME_ID_CLASS;
+import static com.ezand.tinkerpop.repository.Names.CONSTRUCTOR_NAME;
+import static com.ezand.tinkerpop.repository.Names.FIELD_NAME_ELEMENT;
 import static com.ezand.tinkerpop.repository.Names.FIELD_NAME_ID;
 import static com.ezand.tinkerpop.repository.Names.FIELD_NAME_PROPERTY_CHANGES;
-import static com.ezand.tinkerpop.repository.Names.METHOD_NAME_APPLY_ELEMENT;
+import static com.ezand.tinkerpop.repository.Names.METHOD_NAME_GET_ELEMENT;
 import static com.ezand.tinkerpop.repository.Names.METHOD_NAME_GET_ID;
+import static com.ezand.tinkerpop.repository.Names.METHOD_NAME_GET_PROPERTY_CHANGES;
 import static com.ezand.tinkerpop.repository.Names.METHOD_NAME_TO_KEY_VALUES;
 import static com.ezand.tinkerpop.repository.Names.PARAMETER_NAME_ELEMENT;
 import static com.ezand.tinkerpop.repository.Names.VARIABLE_NAME_ARGUMENTS;
 import static com.ezand.tinkerpop.repository.Names.splitNameOf;
 import static com.ezand.tinkerpop.repository.ParameterBuilder.newParameter;
 import static com.sun.tools.javac.code.Flags.FINAL;
+import static com.sun.tools.javac.code.Flags.PRIVATE;
 import static com.sun.tools.javac.code.Flags.PUBLIC;
 import static com.sun.tools.javac.code.Type.ClassType;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
@@ -41,13 +47,15 @@ import static java.util.stream.Collectors.toSet;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDots;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import lombok.core.AnnotationValues;
-import lombok.core.HandlerPriority;
 import lombok.javac.JavacAnnotationHandler;
 import lombok.javac.JavacNode;
 import lombok.javac.JavacTreeMaker;
@@ -58,7 +66,6 @@ import com.ezand.tinkerpop.repository.annotations.Vertex;
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.ezand.tinkerpop.repository.structure.PropertyChanges;
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
@@ -67,7 +74,6 @@ import com.tinkerpop.gremlin.structure.Property;
 
 @ProviderFor(JavacAnnotationHandler.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@HandlerPriority(1)
 public class VertexHandler extends JavacAnnotationHandler<Vertex> {
 
     @Override
@@ -82,12 +88,26 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         implementInterfaces(typeNode, idClass);
         createPropertyChangesField(typeNode);
         modifySetters(typeNode);
+        createGetPropertyChangesMethod(typeNode);
         createToKeyValuesMethod(typeNode);
         JavacNode idFieldNode = createIdField(typeNode, idClass);
-        createApplyElementMethod(typeNode, idFieldNode);
+        createElementField(typeNode);
+        createGetElementMethod(typeNode);
+        createConstructor(typeNode, idFieldNode);
         createGetIdMethod(typeNode, idClass, idFieldNode);
 
+        JCClassDecl type = (JCClassDecl) annotationNode.up().get();
+        java.util.List<JCAnnotation> annotations = filterOut(type.mods.annotations, Vertex.class);
+        type.mods.annotations = List.from(annotations);
+
         System.out.println(typeNode);
+    }
+
+    private java.util.List<JCAnnotation> filterOut(List<JCAnnotation> annotations, Class<? extends Annotation> vertexClass) {
+        return annotations
+                .stream()
+                .filter(a -> !a.type.toString().equals(vertexClass.getName()))
+                .collect(Collectors.toList());
     }
 
     /////////////////////////////
@@ -100,9 +120,8 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         // GraphElement
         JCExpression graphElement = chainDots(typeNode, splitNameOf(GraphElement.class));
 
-        // GraphElement<typeClass, idClass>
+        // GraphElement<idClass>
         JCTypeApply typedGraphElement = maker.TypeApply(graphElement, List.of(
-                chainDotsString(typeNode, typeNode.getName()),
                 chainDotsString(typeNode, idClass.toString())
         ));
 
@@ -114,6 +133,21 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         classDeclaration.implementing = List.from(interfaces.toArray(new JCExpression[interfaces.size()]));
     }
 
+    private void createConstructor(JavacNode typeNode, JavacNode idFieldNode) {
+        newMethod()
+                .name(CONSTRUCTOR_NAME)
+                .modifiers(PUBLIC)
+                .parameters(List.of(
+                        newParameter()
+                                .type(Element.class.getName())
+                                .name("element")
+                                .isFinal(true)
+                                .buildWith(typeNode)
+                ))
+                .body(createConstructorBody(typeNode, idFieldNode))
+                .returnType(Void.class.getName())
+                .injectInto(typeNode);
+    }
 
     ///////////////////////////////
     // AST manipulating - FIELDS //
@@ -123,7 +157,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         newField()
                 .name(FIELD_NAME_PROPERTY_CHANGES)
                 .type(PropertyChanges.class.getName())
-                .modifiers(Flags.PRIVATE | FINAL)
+                .modifiers(PRIVATE | FINAL)
                 .defaultValue(
                         maker.NewClass(null, nil(), chainDots(typeNode, splitNameOf(PropertyChanges.class)), nil(), null)
                 )
@@ -133,14 +167,32 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
     private JavacNode createIdField(JavacNode typeNode, ClassType idClass) {
         return newField()
                 .name(FIELD_NAME_ID)
-                .modifiers(Flags.PRIVATE)
+                .modifiers(PRIVATE)
                 .type(idClass == null ? Object.class.getName() : idClass.toString())
+                .injectInto(typeNode);
+    }
+
+    private void createElementField(JavacNode typeNode) {
+        newField()
+                .name(FIELD_NAME_ELEMENT)
+                .modifiers(PRIVATE)
+                .type(Element.class.getName())
                 .injectInto(typeNode);
     }
 
     ////////////////////////////////
     // AST manipulating - METHODS //
     ////////////////////////////////
+    private void createGetPropertyChangesMethod(JavacNode typeNode) {
+        newMethod()
+                .modifiers(PUBLIC)
+                .name(METHOD_NAME_GET_PROPERTY_CHANGES)
+                .returnType(Map.class.getName()) // TODO add type info
+                .returnTypeTypeArgs(List.of(String.class, Object.class))
+                .body(createGetPropertyChangesBody(typeNode))
+                .injectInto(typeNode);
+    }
+
     private void createToKeyValuesMethod(JavacNode typeNode) {
         newMethod()
                 .modifiers(PUBLIC)
@@ -151,28 +203,21 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                 .injectInto(typeNode);
     }
 
-    private void createApplyElementMethod(JavacNode typeNode, JavacNode idFieldNode) {
-        newMethod()
-                .modifiers(PUBLIC)
-                .name(METHOD_NAME_APPLY_ELEMENT)
-                .returnType(Void.class.getName())
-                .parameters(List.of(
-                        newParameter()
-                                .name(PARAMETER_NAME_ELEMENT)
-                                .type(Element.class.getName())
-                                .isFinal(true)
-                                .buildWith(typeNode)
-                ))
-                .body(createApplyElementBody(typeNode, idFieldNode))
-                .injectInto(typeNode);
-    }
-
     private void createGetIdMethod(JavacNode typeNode, ClassType idClass, JavacNode fieldNode) {
         newMethod()
                 .modifiers(PUBLIC | FINAL)
                 .name(METHOD_NAME_GET_ID)
                 .returnType(idClass == null ? Object.class.getName() : idClass.toString())
                 .body(createGetIdBody(typeNode, fieldNode))
+                .injectInto(typeNode);
+    }
+
+    private void createGetElementMethod(JavacNode typeNode) {
+        newMethod()
+                .modifiers(PUBLIC)
+                .name(METHOD_NAME_GET_ELEMENT)
+                .returnType(Element.class.getName())
+                .body(createGetElementBody(typeNode))
                 .injectInto(typeNode);
     }
 
@@ -214,6 +259,83 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
     //////////////////////////////////////
     // AST manipulating - BODY CREATION //
     //////////////////////////////////////
+    private JCBlock createConstructorBody(JavacNode typeNode, JavacNode idFieldNode) {
+        JavacTreeMaker maker = typeNode.getTreeMaker();
+        java.util.List<JCStatement> statements = Lists.newArrayList();
+
+        JCTree.JCExpressionStatement assignElement = maker.Exec(maker.Assign(getThisField(typeNode, FIELD_NAME_ELEMENT), maker.Ident(typeNode.toName("element"))));
+        statements.add(assignElement);
+
+        // element.id
+        JCFieldAccess id = maker.Select(maker.Ident(typeNode.toName("element")), typeNode.toName("id"));
+
+        // ([type]) element.id()
+        JCTypeCast castId = maker.TypeCast(((JCVariableDecl) idFieldNode.get()).vartype, maker.Apply(nil(), id, nil()));
+
+        // this.$id = element.id();
+        statements.add(maker.Exec(maker.Assign(getThisField(typeNode, idFieldNode.getName()), castId)));
+
+        JCFieldAccess property = maker.Select(maker.Ident(typeNode.toName(PARAMETER_NAME_ELEMENT)), typeNode.toName("property"));
+        getAccessorFields(typeNode)
+                .stream()
+                .forEach(f -> {
+                    // this.field
+                    JCFieldAccess field = getThisField(typeNode, f.getName());
+
+                    JCVariableDecl fieldDeclaration = (JCVariableDecl) f.get();
+                    Name fieldProperty = typeNode.toName(f.getName() + "Property");
+                    JCIdent fieldPropertyIdentity = maker.Ident(fieldProperty);
+
+                    // element.property(field)
+                    JCMethodInvocation elementProperty = maker.Apply(nil(), property, List.of(maker.Literal(f.getName())));
+
+                    // Property property = element.property(field)
+                    JCVariableDecl propertyVariable = maker.VarDef(maker.Modifiers(FINAL), fieldProperty, chainDots(typeNode, splitNameOf(Property.class)), elementProperty);
+
+                    // property.isPresent()
+                    JCMethodInvocation isPresent = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("isPresent")), nil());
+
+                    // property.value()
+                    JCMethodInvocation value = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("value")), nil());
+
+                    // (Type) property.value()
+                    JCTypeCast cast = maker.TypeCast(fieldDeclaration.vartype, value);
+
+                    // this.field = property.value()
+                    JCAssign assignValue = maker.Assign(chainDotsString(typeNode, "this." + f.getName()), cast);
+
+                    // this.field = [default_value_for_type]
+                    JCAssign assignDefaultValue = maker.Assign(chainDotsString(typeNode, "this." + f.getName()), getDefaultASTValue(f));
+
+                    // if(property.isPresent() this.field = [value] else this.field = [default_value])
+                    JCIf anIf = maker.If(isPresent, maker.Exec(assignValue), maker.Exec(assignDefaultValue));
+
+                    statements.add(propertyVariable);
+                    statements.add(anIf);
+
+                    maker.Assign(field, null);
+                });
+
+        return maker.Block(0, List.from(statements));
+    }
+
+    private JCBlock createGetPropertyChangesBody(JavacNode typeNode) {
+        JavacTreeMaker maker = typeNode.getTreeMaker();
+
+        // this.$propertyChanges
+        JCFieldAccess propertyChanges = getThisField(typeNode, FIELD_NAME_PROPERTY_CHANGES);
+
+        // this.$propertyChanges.getChanges
+        JCFieldAccess getChanges = maker.Select(propertyChanges, typeNode.toName("getChanges"));
+
+        // this.$propertyChanges.getChanges()
+        JCMethodInvocation applyGetChanges = maker.Apply(nil(), getChanges, nil());
+
+        return maker.Block(0, List.of(
+                maker.Return(applyGetChanges)
+        ));
+    }
+
     private JCBlock createToKeyValuesBody(JavacNode typeNode) {
         JavacTreeMaker maker = typeNode.getTreeMaker();
         java.util.List<JCStatement> statements = new ArrayList<>();
@@ -265,69 +387,17 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         return maker.Block(0, List.from(statements));
     }
 
-    @SuppressWarnings("unchecked")
-    private JCBlock createApplyElementBody(JavacNode typeNode, JavacNode idFieldNode) {
-        JavacTreeMaker maker = typeNode.getTreeMaker();
-
-        // element.property
-        JCFieldAccess property = maker.Select(maker.Ident(typeNode.toName(PARAMETER_NAME_ELEMENT)), typeNode.toName("property"));
-
-        java.util.List<JCStatement> statements = Lists.newArrayList();
-
-        // TODO apply id
-
-        // element.id
-        JCFieldAccess id = maker.Select(maker.Ident(typeNode.toName("element")), typeNode.toName("id"));
-        JCMethodInvocation apply1 = maker.Apply(nil(), id, nil());
-
-        // (Type) element.id()
-        JCTypeCast cast1 = maker.TypeCast(((JCVariableDecl) idFieldNode.get()).vartype, apply1);
-
-        // this.$id = element.id()
-        JCAssign assign1 = maker.Assign(chainDotsString(typeNode, "this." + idFieldNode.getName()), cast1);
-
-        statements.add(maker.Exec(assign1));
-
-        getAccessorFields(typeNode)
-                .stream()
-                .filter(f -> !f.getName().equals("class"))
-                .forEach(f -> {
-                    JCVariableDecl fieldDeclaration = (JCVariableDecl) f.get();
-                    Name fieldProperty = typeNode.toName(f.getName() + "Property");
-                    JCIdent fieldPropertyIdentity = maker.Ident(fieldProperty);
-
-                    // element.property(field)
-                    JCMethodInvocation elementProperty = maker.Apply(nil(), property, List.of(maker.Literal(f.getName())));
-
-                    // Property property = element.property(field)
-                    JCVariableDecl propertyVariable = maker.VarDef(maker.Modifiers(FINAL), fieldProperty, chainDots(typeNode, splitNameOf(Property.class)), elementProperty);
-
-                    // property.isPresent()
-                    JCMethodInvocation isPresent = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("isPresent")), nil());
-
-                    // property.value()
-                    JCMethodInvocation value = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("value")), nil());
-
-                    // (Type) property.value()
-                    JCTypeCast cast = maker.TypeCast(fieldDeclaration.vartype, value);
-
-                    // this.field = property.value()
-                    JCAssign assign = maker.Assign(chainDotsString(typeNode, "this." + f.getName()), cast);
-
-                    // if(property.isPresent())
-                    JCIf anIf = maker.If(isPresent, maker.Exec(assign), null);
-
-                    statements.add(propertyVariable);
-                    statements.add(anIf);
-                });
-
-        return maker.Block(0, List.from(statements));
-    }
-
     private JCBlock createGetIdBody(JavacNode typeNode, JavacNode fieldNode) {
         JCVariableDecl fieldVariable = (JCVariableDecl) fieldNode.get();
         JavacTreeMaker maker = typeNode.getTreeMaker();
         JCReturn idReturn = maker.Return(chainDotsString(typeNode, "this." + fieldVariable.getName().toString()));
         return maker.Block(0, List.of(idReturn));
+    }
+
+    private JCBlock createGetElementBody(JavacNode typeNode) {
+        JavacTreeMaker maker = typeNode.getTreeMaker();
+        return maker.Block(0, List.of(
+                maker.Return(getThisField(typeNode, FIELD_NAME_ELEMENT))
+        ));
     }
 }

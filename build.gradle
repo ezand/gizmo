@@ -11,11 +11,13 @@ allprojects {
     }
 
     dependencies {
+        compile group: 'org.reflections', name: 'reflections', version: '0.9.9'
         compile group: 'net.sf.dozer', name: 'dozer', version: '5.5.1'
         compile group: 'com.tinkerpop', name: 'gremlin-core', version: '3.0.0.M3'
         compile group: 'com.google.guava', name: 'guava', version: '18.0'
         compile group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.7'
         compile group: 'org.projectlombok', name: 'lombok', version: '1.14.8' // TODO ONLY needed for compile
+        compile group: 'org.projectlombok', name: 'lombok.ast', version: '0.2' // TODO ONLY needed for compile
 
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'

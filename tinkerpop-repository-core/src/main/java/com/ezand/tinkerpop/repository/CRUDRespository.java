@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.ezand.tinkerpop.repository.structure.GraphElement;
 
-public interface CRUDRespository<B extends GraphElement<B, ID>, ID> {
+public interface CRUDRespository<B, ID> {
 
     Set<B> find();
 

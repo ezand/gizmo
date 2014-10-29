@@ -1,22 +1,26 @@
 package com.ezand.tinkerpop.repository;
 
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.fromElement;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getKeyValues;
+import static com.ezand.tinkerpop.repository.utils.Exceptions.beanNotManagedException;
+import static com.ezand.tinkerpop.repository.utils.GizmoMapper.map;
+import static com.ezand.tinkerpop.repository.utils.GraphUtil.assertManageableBean;
+import static com.ezand.tinkerpop.repository.utils.GraphUtil.getChanges;
+import static com.ezand.tinkerpop.repository.utils.GraphUtil.getElement;
+import static com.ezand.tinkerpop.repository.utils.GraphUtil.isManaged;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
 import com.google.common.reflect.TypeToken;
 import com.tinkerpop.gremlin.process.Traversal;
 import com.tinkerpop.gremlin.process.graph.GraphTraversal;
 import com.tinkerpop.gremlin.structure.Element;
 import com.tinkerpop.gremlin.structure.Graph;
+import com.tinkerpop.gremlin.structure.Property;
 import com.tinkerpop.gremlin.structure.Vertex;
 
-public abstract class GraphRepository<B extends GraphElement<B, ID>, ID> implements CRUDRespository<B, ID> {
+public abstract class GraphRepository<B, ID> implements CRUDRespository<B, ID> {
     protected final Graph graph;
     protected final Class<? super B> beanClass;
 
@@ -42,7 +46,7 @@ public abstract class GraphRepository<B extends GraphElement<B, ID>, ID> impleme
     @SuppressWarnings("unchecked")
     @Override
     public B find(ID id) {
-        return (B) fromElement(getGraph().v(id), beanClass);
+        return (B) map(getGraph().v(id), beanClass);
     }
 
     @Override
@@ -58,37 +62,56 @@ public abstract class GraphRepository<B extends GraphElement<B, ID>, ID> impleme
 
     @Override
     public void delete(B bean) {
-        getGraph().v(bean.$getId()).remove();
+        assertManageableBean(bean);
+
+        if (!isManaged(bean)) {
+            throw beanNotManagedException();
+        }
+
+        getElement(bean).remove();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public B save(B bean) {
-        if (isExistingBean(bean)) {
+        assertManageableBean(bean);
+
+        if (isManaged(bean)) {
             return update(bean);
         }
 
-        Vertex vertex = getGraph().addVertex(getKeyValues(bean));
-        return (B) fromElement(vertex, beanClass);
+        Vertex vertex = getGraph().addVertex(map(bean));
+        return (B) map(vertex, beanClass);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Set<B> save(B... beans) {
         Set<B> saved = new HashSet<>();
-        Arrays.stream(beans)
-                .forEach(b -> saved.add(save(b)));
+        Arrays.stream(beans).forEach(b -> saved.add(save(b)));
         return saved;
     }
 
     @Override
     public B update(B bean) {
-        if (bean.$getId() == null) {
+        assertManageableBean(bean);
+
+        if (!isManaged(bean)) {
             return save(bean);
         }
 
-        // TODO loop through properties and update vertex
-        return null;
+        Element element = getElement(bean);
+        getChanges(bean)
+                .entrySet()
+                .forEach(e -> {
+                    Property<Object> property = element.property(e.getKey());
+                    if (property.isPresent()) {
+                        property.remove();
+                    }
+                    element.property(e.getKey(), e.getValue());
+                });
+
+        return bean;
     }
 
     @Override
@@ -116,11 +139,7 @@ public abstract class GraphRepository<B extends GraphElement<B, ID>, ID> impleme
                 .toSet()
                 .stream()
                 .filter(e -> e instanceof Vertex)
-                .map(e -> (B) fromElement(e, beanClass))
+                .map(e -> (B) map(e, beanClass))
                 .collect(Collectors.toSet());
-    }
-
-    protected boolean isExistingBean(B bean) {
-        return bean.$getId() != null && graph.v(bean.$getId()).count().next() > 0;
     }
 }

@@ -38,7 +38,7 @@ public class GraphRepositoryTest {
 
     @Test
     public void should_save_new_bean() {
-        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, "My awesome shelter", null));
+        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, null, "My awesome shelter", null));
 
         assertThat(animalShelter, notNullValue());
         assertThat(animalShelter.getId(), notNullValue());

@@ -55,7 +55,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void should_invoke_bean_method() throws Exception {
-        AnimalShelter animalShelter = new AnimalShelter(null, MY_SHELTER, null);
+        AnimalShelter animalShelter = new AnimalShelter(null, null, MY_SHELTER, null);
         Object name = invokeBeanMethod(animalShelter, AnimalShelter.class.getDeclaredMethod("getName"));
 
         assertThat(name, notNullValue());
