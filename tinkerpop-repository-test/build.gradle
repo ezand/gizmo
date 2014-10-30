@@ -1,4 +1,0 @@
-dependencies {
-    compile project(':tinkerpop-repository-core')
-    compile project(':tinkerpop-repository-processor')
-}

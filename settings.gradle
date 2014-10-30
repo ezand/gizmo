@@ -1,3 +1,3 @@
-rootProject.name = 'tinkerpop-repository'
+rootProject.name = 'gizmo'
 
-include 'tinkerpop-repository-core', 'tinkerpop-repository-processor', 'tinkerpop-repository-ast', 'tinkerpop-repository-test'
+include 'gizmo-core', 'gizmo-processor', 'gizmo-ast', 'gizmo-test'

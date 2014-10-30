@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':gizmo-core')
+    compile project(':gizmo-processor')
+}
