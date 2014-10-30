@@ -1,7 +1,7 @@
 package com.ezand.tinkerpop.repository;
 
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getChanges;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getId;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getChanges;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -14,7 +14,7 @@ import com.ezand.tinkerpop.repository.helpers.repository.AnimalShelterRepository
 import com.tinkerpop.gremlin.structure.Graph;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
-public class GraphRepositoryTest {
+public class GizmoRepositoryTest {
     private AnimalShelterRepository repository;
     private Graph graph;
 

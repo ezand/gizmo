@@ -6,15 +6,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
-import com.ezand.tinkerpop.repository.structure.Relationship;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
+import com.ezand.tinkerpop.repository.annotations.Relationship;
 import com.google.common.collect.Maps;
 import com.tinkerpop.gremlin.structure.Element;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Animal implements GraphElement<Long> {
+public class Animal implements GizmoElement<Long> {
     private final Map<String, Object> changes = Maps.newHashMap();
     private Element element;
 

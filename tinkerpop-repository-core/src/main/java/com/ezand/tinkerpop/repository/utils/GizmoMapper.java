@@ -5,7 +5,7 @@ import static com.ezand.tinkerpop.repository.utils.ReflectionUtils.findElementCo
 
 import java.lang.reflect.Constructor;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
 import com.tinkerpop.gremlin.structure.Element;
 
 public class GizmoMapper {
@@ -15,6 +15,6 @@ public class GizmoMapper {
     }
 
     public static <B> Object[] map(B bean) {
-        return ((GraphElement) bean).$toKeyValues();
+        return ((GizmoElement) bean).$toKeyValues();
     }
 }

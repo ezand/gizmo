@@ -15,7 +15,7 @@ import com.tinkerpop.gremlin.structure.Graph;
 import com.tinkerpop.gremlin.structure.Vertex;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
-public class GraphRepositoryTest {
+public class GizmoRepositoryTest {
     private Graph graph;
     private AnimalShelterRepository repository;
 

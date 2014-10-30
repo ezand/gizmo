@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
 
 public class Exceptions {
 
@@ -21,7 +21,7 @@ public class Exceptions {
         return new RuntimeException(format("An error occurred while executing method %s on %s with arguments %s", method.getName(), instance.getClass().getName(), Arrays.toString(arguments)));
     }
 
-    public static <B extends GraphElement> RuntimeException beanDescriptorException(Class<B> beanClass) {
+    public static <B extends GizmoElement> RuntimeException beanDescriptorException(Class<B> beanClass) {
         return new RuntimeException(format("An error occurred while getting bean descriptors for class %s", beanClass));
     }
 

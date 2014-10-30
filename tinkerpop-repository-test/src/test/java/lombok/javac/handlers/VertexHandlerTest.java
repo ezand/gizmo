@@ -1,8 +1,8 @@
 package lombok.javac.handlers;
 
 import static com.ezand.tinkerpop.repository.utils.GizmoMapper.map;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getChanges;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getId;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getChanges;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;

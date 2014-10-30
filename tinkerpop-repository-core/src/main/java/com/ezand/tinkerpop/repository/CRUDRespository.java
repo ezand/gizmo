@@ -2,8 +2,6 @@ package com.ezand.tinkerpop.repository;
 
 import java.util.Set;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
-
 public interface CRUDRespository<B, ID> {
 
     Set<B> find();

@@ -63,7 +63,7 @@ import lombok.javac.JavacTreeMaker;
 import org.mangosdk.spi.ProviderFor;
 
 import com.ezand.tinkerpop.repository.annotations.Vertex;
-import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
 import com.ezand.tinkerpop.repository.structure.PropertyChanges;
 import com.google.common.collect.Lists;
 import com.sun.tools.javac.tree.JCTree;
@@ -118,7 +118,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         JCClassDecl classDeclaration = (JCClassDecl) typeNode.get();
 
         // GraphElement
-        JCExpression graphElement = chainDots(typeNode, splitNameOf(GraphElement.class));
+        JCExpression graphElement = chainDots(typeNode, splitNameOf(GizmoElement.class));
 
         // GraphElement<idClass>
         JCTypeApply typedGraphElement = maker.TypeApply(graphElement, List.of(

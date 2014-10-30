@@ -2,10 +2,10 @@ package com.ezand.tinkerpop.repository;
 
 import static com.ezand.tinkerpop.repository.utils.Exceptions.beanNotManagedException;
 import static com.ezand.tinkerpop.repository.utils.GizmoMapper.map;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.assertManageableBean;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getChanges;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.getElement;
-import static com.ezand.tinkerpop.repository.utils.GraphUtil.isManaged;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.assertManageableBean;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getChanges;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getElement;
+import static com.ezand.tinkerpop.repository.utils.GizmoUtil.isManaged;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -20,11 +20,11 @@ import com.tinkerpop.gremlin.structure.Graph;
 import com.tinkerpop.gremlin.structure.Property;
 import com.tinkerpop.gremlin.structure.Vertex;
 
-public abstract class GraphRepository<B, ID> implements CRUDRespository<B, ID> {
+public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     protected final Graph graph;
     protected final Class<? super B> beanClass;
 
-    protected GraphRepository(Graph graph) {
+    protected GizmoRepository(Graph graph) {
         this.graph = graph;
         this.beanClass = new TypeToken<B>(getClass()) {
         }.getRawType();

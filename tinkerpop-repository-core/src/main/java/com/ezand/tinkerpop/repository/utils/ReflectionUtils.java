@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
 import com.google.common.collect.Lists;
 import com.tinkerpop.gremlin.structure.Element;
 
@@ -57,7 +57,7 @@ public class ReflectionUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <A extends Annotation, B extends GraphElement> Constructor<B> getConstructor(Class<B> beanClass, Class<A> annotationClass) {
+    public static <A extends Annotation, B extends GizmoElement> Constructor<B> getConstructor(Class<B> beanClass, Class<A> annotationClass) {
         return (Constructor<B>) Arrays.stream(beanClass.getDeclaredConstructors())
                 .filter(c -> c.getDeclaredAnnotation(annotationClass) != null)
                 .distinct()
@@ -65,11 +65,11 @@ public class ReflectionUtils {
                 .orElseThrow(RuntimeException::new);
     }
 
-    public static <B extends GraphElement> ConstructorProperties getConstructorProperties(Constructor<B> constructor) {
+    public static <B extends GizmoElement> ConstructorProperties getConstructorProperties(Constructor<B> constructor) {
         return constructor.getDeclaredAnnotation(ConstructorProperties.class);
     }
 
-    public static <B extends GraphElement> Object invokeBeanMethod(B bean, Method method, Object... arguments) {
+    public static <B extends GizmoElement> Object invokeBeanMethod(B bean, Method method, Object... arguments) {
         try {
             return method.invoke(bean, arguments);
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -101,7 +101,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <B extends GraphElement> PropertyDescriptor[] getPropertyDescriptors(Class<B> beanClass) {
+    public static <B extends GizmoElement> PropertyDescriptor[] getPropertyDescriptors(Class<B> beanClass) {
         try {
             List<PropertyDescriptor> propertyDescriptors = Arrays.stream(Introspector.getBeanInfo(beanClass).getPropertyDescriptors())
                     .filter(pd -> !pd.getName().equals("class"))
@@ -112,7 +112,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <B extends GraphElement> Set<String> getPropertyKeys(Class<B> beanClass) {
+    public static <B extends GizmoElement> Set<String> getPropertyKeys(Class<B> beanClass) {
         PropertyDescriptor[] pd = ReflectionUtils.getPropertyDescriptors(beanClass);
         return Arrays.stream(pd)
                 .map(FeatureDescriptor::getName)

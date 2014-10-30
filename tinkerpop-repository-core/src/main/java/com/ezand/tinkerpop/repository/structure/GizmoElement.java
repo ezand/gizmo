@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.tinkerpop.gremlin.structure.Element;
 
-public interface GraphElement<ID> {
+public interface GizmoElement<ID> {
     ID $getId();
 
     Object[] $toKeyValues();

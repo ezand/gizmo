@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.ezand.tinkerpop.repository.annotations.Vertex;
-import com.ezand.tinkerpop.repository.structure.GraphElement;
+import com.ezand.tinkerpop.repository.structure.GizmoElement;
 
 @Data
 @NoArgsConstructor
@@ -19,7 +19,7 @@ public class AnimalShelter {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("AnimalShelter{");
-        sb.append("id='").append(((GraphElement) this).$getId()).append('\'');
+        sb.append("id='").append(((GizmoElement) this).$getId()).append('\'');
         sb.append(", name='").append(address).append('\'');
         sb.append(", address='").append(address).append('\'');
         sb.append(", inhabitantCount='").append(inhabitantCount).append('\'');
