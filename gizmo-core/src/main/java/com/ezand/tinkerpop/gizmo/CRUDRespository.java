@@ -22,9 +22,12 @@ public interface CRUDRespository<B, ID> {
 
     B update(B bean);
 
+    @SuppressWarnings({"unchecked"})
+    Set<B> update(B... beans);
+
     long count();
 
     long count(String key);
 
-    long count(String key, String property);
+    long count(String key, Object property);
 }

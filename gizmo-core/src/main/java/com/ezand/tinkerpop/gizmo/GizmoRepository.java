@@ -6,9 +6,10 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.assertManageableBean;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getElement;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,7 +47,11 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     @SuppressWarnings("unchecked")
     @Override
     public B find(ID id) {
-        return (B) map(getGraph().v(id), beanClass);
+        try {
+            return (B) map(getGraph().v(id), beanClass);
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     @Override
@@ -80,14 +85,14 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
             return update(bean);
         }
 
-        Vertex vertex = getGraph().addVertex(map(bean));
+        Vertex vertex = getGraph().addVertex(map(bean, getLabel()));
         return (B) map(vertex, beanClass);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Set<B> save(B... beans) {
-        Set<B> saved = new HashSet<>();
+        Set<B> saved = newHashSet();
         Arrays.stream(beans).forEach(b -> saved.add(save(b)));
         return saved;
     }
@@ -114,6 +119,14 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
         return bean;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Set<B> update(B... beans) {
+        Set<B> updated = newHashSet();
+        Arrays.stream(beans).forEach(b -> updated.add(update(b)));
+        return updated;
+    }
+
     @Override
     public long count() {
         return getClassTypeTraversal().count().next();
@@ -125,7 +138,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     }
 
     @Override
-    public long count(String key, String property) {
+    public long count(String key, Object property) {
         return getClassTypeTraversal().has(key, property).count().next();
     }
 

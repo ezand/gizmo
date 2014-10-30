@@ -10,6 +10,7 @@ import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 import com.ezand.tinkerpop.gizmo.annotations.Relationship;
 import com.google.common.collect.Maps;
 import com.tinkerpop.gremlin.structure.Element;
+import com.tinkerpop.gremlin.structure.Property;
 
 @Data
 @NoArgsConstructor
@@ -23,6 +24,9 @@ public class Animal implements GizmoElement<Long> {
 
     public Animal(Element element) {
         this.element = element;
+        this.id = (Long) element.id();
+        Property nameProperty = element.property("name");
+        this.name = nameProperty.isPresent() ? (String) nameProperty.value() : null;
     }
 
     @Relationship(label = "inhabits")

@@ -117,18 +117,18 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         JavacTreeMaker maker = typeNode.getTreeMaker();
         JCClassDecl classDeclaration = (JCClassDecl) typeNode.get();
 
-        // GraphElement
-        JCExpression graphElement = chainDots(typeNode, splitNameOf(GizmoElement.class));
+        // GizmoElement
+        JCExpression gizmoElement = chainDots(typeNode, splitNameOf(GizmoElement.class));
 
-        // GraphElement<idClass>
-        JCTypeApply typedGraphElement = maker.TypeApply(graphElement, List.of(
+        // GizmoElement<idClass>
+        JCTypeApply typedGizmoElement = maker.TypeApply(gizmoElement, List.of(
                 chainDotsString(typeNode, idClass.toString())
         ));
 
         Set<JCExpression> interfaces = classDeclaration.getImplementsClause()
                 .stream()
                 .collect(toSet());
-        interfaces.add(typedGraphElement);
+        interfaces.add(typedGizmoElement);
 
         classDeclaration.implementing = List.from(interfaces.toArray(new JCExpression[interfaces.size()]));
     }

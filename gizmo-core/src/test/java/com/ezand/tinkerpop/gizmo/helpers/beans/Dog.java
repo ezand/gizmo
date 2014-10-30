@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 import com.google.common.collect.Maps;
 import com.tinkerpop.gremlin.structure.Element;
+import com.tinkerpop.gremlin.structure.Property;
 
 @Data
 @NoArgsConstructor
@@ -23,11 +24,16 @@ public class Dog implements GizmoElement<Long> {
 
     public Dog(Element element) {
         this.element = element;
+        this.id = (Long) element.id();
+        Property nameProperty = element.property("name");
+        this.name = nameProperty.isPresent() ? (String) nameProperty.value() : null;
+        Property breadProperty = element.property("name");
+        this.bread = breadProperty.isPresent() ? (String) breadProperty.value() : null;
     }
 
     @Override
     public Long $getId() {
-        return null;
+        return id;
     }
 
     @Override

@@ -1,46 +1,39 @@
 package com.ezand.tinkerpop.gizmo;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-
-import org.junit.Before;
 import org.junit.Test;
 
 import com.ezand.tinkerpop.gizmo.helpers.beans.AnimalShelter;
 import com.ezand.tinkerpop.gizmo.helpers.repository.AnimalShelterRepository;
-import com.tinkerpop.gremlin.process.T;
-import com.tinkerpop.gremlin.structure.Graph;
-import com.tinkerpop.gremlin.structure.Vertex;
+import com.ezand.tinkerpop.gizmo.helpers.repository.NonManageableRepository;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
-public class GizmoRepositoryTest {
-    private Graph graph;
+public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelter> {
     private AnimalShelterRepository repository;
+    private NonManageableRepository nonManageableRepository;
 
-    @Before
-    public void init() {
-        graph = TinkerGraph.open();
+    public GizmoRepositoryTest() {
+        TinkerGraph graph = TinkerGraph.open();
         repository = new AnimalShelterRepository(graph);
+        nonManageableRepository = new NonManageableRepository(graph);
     }
 
-    @Test
-    public void should_find_by_id() {
-        String animalShelterName = "My awesome shelter";
-        Vertex vertex = graph.addVertex(T.label, AnimalShelter.class.getName(), "name", animalShelterName);
-        AnimalShelter animalShelter = repository.find((long) vertex.id());
-
-        assertThat(animalShelter, notNullValue());
-        assertThat(animalShelter.getId(), notNullValue());
-        assertThat(animalShelter.getName(), equalTo(animalShelterName));
+    @Override
+    protected GizmoRepository<AnimalShelter, Long> getRepository() {
+        return repository;
     }
 
-    @Test
-    public void should_save_new_bean() {
-        AnimalShelter animalShelter = repository.save(new AnimalShelter(null, null, "My awesome shelter", null));
+    @Test(expected = RuntimeException.class)
+    public void should_throw_exception_when_saving_non_manageable_bean() throws Exception {
+        nonManageableRepository.save("Some string");
+    }
 
-        assertThat(animalShelter, notNullValue());
-        assertThat(animalShelter.getId(), notNullValue());
-        assertThat(animalShelter.getName(), equalTo("My awesome shelter"));
+    @Override
+    protected AnimalShelter createBean() {
+        return new AnimalShelter(null, null, "My Shelter", null);
+    }
+
+    @Override
+    protected String[] getExampleBeanKeyValue() {
+        return new String[]{"name", "My Shelter"};
     }
 }
