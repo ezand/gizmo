@@ -1,15 +1,15 @@
 package lombok.javac.handlers;
 
-import static com.ezand.tinkerpop.repository.utils.GizmoMapper.map;
-import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getChanges;
-import static com.ezand.tinkerpop.repository.utils.GizmoUtil.getId;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoMapper.map;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getId;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 import org.junit.Test;
 
-import com.ezand.tinkerpop.repository.helpers.beans.AnimalShelter;
+import com.ezand.tinkerpop.gizmo.helpers.beans.AnimalShelter;
 import com.tinkerpop.gremlin.structure.Vertex;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
