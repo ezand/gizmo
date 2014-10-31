@@ -7,18 +7,22 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getId;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getManageable;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManageable;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.massageArguments;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.prependLabelArguments;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.validateArguments;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import com.ezand.tinkerpop.gizmo.helpers.beans.AnimalShelter;
-import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
+import com.ezand.tinkerpop.gizmo.helpers.repository.AnimalShelterRepository;
 import com.tinkerpop.gremlin.process.T;
 import com.tinkerpop.gremlin.structure.Element;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
@@ -89,11 +93,40 @@ public class GizmoUtilTest {
         assertThat(arguments[1], equalTo(AnimalShelter.class.getName()));
     }
 
+    @Test
+    public void should_filter_out_arguments_with_null_value() throws Exception {
+        Object[] arguments = new Object[]{"name", "My shelter", "address", null, "inhabitantCount", 1};
+        Pair<Object[], Set<String>> pair = massageArguments(arguments);
+        Object[] filteredArguments = pair.getKey();
+
+        assertThat(filteredArguments.length, equalTo(arguments.length - 2));
+    }
+
+    @Test
+    public void should_return_collection_of_property_keys_with_null_value() throws Exception {
+        Object[] arguments = new Object[]{"name", "My shelter", "address", null, "inhabitantCount", 1};
+        Pair<Object[], Set<String>> pair = massageArguments(arguments);
+        Set<String> keys = pair.getValue();
+
+        assertThat(keys.size(), equalTo(1));
+        assertThat(keys.contains("address"), equalTo(true));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void argument_validation_should_fail_with_integer_key() throws Exception {
+        validateArguments(new Object[]{"name", "My shelter", "address", null, 1, 1});
+    }
+
+    @Test
+    public void argument_validation_should_pass_for_T_type_argument_keys() throws Exception {
+        validateArguments(new Object[]{T.label, AnimalShelter.class.getName()});
+    }
+
     private AnimalShelter getManagedBean() {
-        return new AnimalShelter(TinkerGraph.open().addVertex("name", "My shelter"));
+        return new AnimalShelterRepository(TinkerGraph.open()).save(getNonManagedBean());
     }
 
     private AnimalShelter getNonManagedBean() {
-        return new AnimalShelter(null, null, "My shelter", null);
+        return new AnimalShelter(null, "My shelter", "Street 1, City", 1);
     }
 }

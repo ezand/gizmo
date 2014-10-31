@@ -8,6 +8,8 @@ import com.ezand.tinkerpop.gizmo.helpers.repository.NonManageableRepository;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
 public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelter> {
+    public static final String SHELTER_NAME = "My Shelter";
+
     private AnimalShelterRepository repository;
     private NonManageableRepository nonManageableRepository;
 
@@ -29,11 +31,11 @@ public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelt
 
     @Override
     protected AnimalShelter createBean() {
-        return new AnimalShelter(null, null, "My Shelter", null);
+        return new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1);
     }
 
     @Override
     protected String[] getExampleBeanKeyValue() {
-        return new String[]{"name", "My Shelter"};
+        return new String[]{"name", SHELTER_NAME};
     }
 }

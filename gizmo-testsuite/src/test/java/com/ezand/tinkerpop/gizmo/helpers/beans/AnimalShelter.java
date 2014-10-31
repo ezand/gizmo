@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.ezand.tinkerpop.gizmo.annotations.Id;
 import com.ezand.tinkerpop.gizmo.annotations.Vertex;
 import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 
@@ -12,6 +13,8 @@ import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 @AllArgsConstructor
 @Vertex(idClass = Long.class)
 public class AnimalShelter {
+    @Id
+    private Long id;
     private String name;
     private String address;
     private int inhabitantCount;
@@ -25,5 +28,15 @@ public class AnimalShelter {
         sb.append(", inhabitantCount='").append(inhabitantCount).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

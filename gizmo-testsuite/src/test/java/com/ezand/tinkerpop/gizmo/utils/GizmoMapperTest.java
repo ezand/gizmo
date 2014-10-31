@@ -28,7 +28,7 @@ public class GizmoMapperTest {
 
     @Test
     public void should_map_bean_to_key_values() throws Exception {
-        AnimalShelter animalShelter = new AnimalShelter(null, null, SHELTER_NAME, null);
+        AnimalShelter animalShelter = new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1);
         Object[] keyValues = map(animalShelter, AnimalShelter.class.getName());
 
         assertThat(keyValues, notNullValue());

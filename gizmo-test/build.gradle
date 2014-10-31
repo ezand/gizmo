@@ -1,4 +1,10 @@
 dependencies {
-    compile project(':gizmo-core')
-    compile project(':gizmo-processor')
+    compile project(":gizmo-core")
+
+    compile group: 'junit', name: 'junit', version: '4.11'
+    compile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+    compile group: 'org.mockito', name: 'mockito-all', version: '1.10.8'
+    compile group: 'org.powermock', name: 'powermock-module-junit4', version: '1.5.6'
+    compile group: 'org.powermock', name: 'powermock-api-mockito', version: '1.5.6'
+    compile group: 'com.tinkerpop', name: 'tinkergraph-gremlin', version: '3.0.0.M3'
 }

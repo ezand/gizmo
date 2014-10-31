@@ -1,7 +1,9 @@
 package com.ezand.tinkerpop.gizmo;
 
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.getDefaultValue;
+import static com.google.common.collect.Lists.newArrayList;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
+import static com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
 import static com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import static com.sun.tools.javac.tree.JCTree.JCNewClass;
@@ -15,11 +17,11 @@ import static lombok.core.AST.Kind.METHOD;
 import static lombok.javac.Javac.CTC_BOT;
 import static lombok.javac.Javac.isPrimitive;
 import static lombok.javac.handlers.JavacHandlerUtil.MemberExistsResult.NOT_EXISTS;
-import static lombok.javac.handlers.JavacHandlerUtil.chainDots;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
 import static lombok.javac.handlers.JavacHandlerUtil.toGetterName;
 import static lombok.javac.handlers.JavacHandlerUtil.toSetterName;
 
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ import lombok.javac.JavacNode;
 import lombok.javac.JavacTreeMaker;
 import lombok.javac.handlers.JavacHandlerUtil;
 
+import com.ezand.tinkerpop.gizmo.annotations.Id;
 import com.sun.tools.javac.util.List;
 
 public class ASTUtil {
@@ -137,5 +140,43 @@ public class ASTUtil {
 
     public static JCFieldAccess getThisField(JavacNode typeNode, String fieldName) {
         return typeNode.getTreeMaker().Select(chainDotsString(typeNode, "this"), typeNode.toName(fieldName));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A extends Annotation> void removeAnnotations(JavacNode annotationNode, Class<A>... annotationClasses) {
+        JCClassDecl type = (JCClassDecl) annotationNode.up().get();
+
+        java.util.List<JCAnnotation> annotations = newArrayList();
+        Arrays.stream(annotationClasses)
+                .forEach(c -> annotations.addAll(filterOut(type.mods.annotations, c)));
+
+        type.mods.annotations = List.from(annotations);
+    }
+
+    public static java.util.List<JCAnnotation> filterOut(List<JCAnnotation> annotations, Class<? extends Annotation> vertexClass) {
+        return annotations
+                .stream()
+                .filter(a -> !a.type.toString().equals(vertexClass.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public static JavacNode findIdField(JavacNode typeNode) {
+        return getFields(typeNode)
+                .stream()
+                .filter(n -> hasAnnotation(n, Id.class))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static <A extends Annotation> boolean hasAnnotation(JavacNode fieldNode, Class<A> annotationClass) {
+        JCVariableDecl field = (JCVariableDecl) fieldNode.get();
+
+        for (JCAnnotation annotation : field.mods.annotations) {
+            if (annotation.type.toString().equals(annotationClass.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -1,5 +1,6 @@
 package lombok.javac.handlers;
 
+import static com.ezand.tinkerpop.gizmo.ASTUtil.findIdField;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.findSetter;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getAccessorFields;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getAnnotationParameterValue;
@@ -47,11 +48,9 @@ import static java.util.stream.Collectors.toSet;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDots;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
@@ -84,30 +83,22 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         // Annotation parameter values
         ClassType idClass = (ClassType) getAnnotationParameterValue(annotationAst, ANNOTATION_PARAMETER_NAME_ID_CLASS);
 
+        // Annotated id field
+        JavacNode idFieldNode = findIdField(typeNode);
+
         // Modify the AST
         implementInterfaces(typeNode, idClass);
         createPropertyChangesField(typeNode);
         modifySetters(typeNode);
         createGetPropertyChangesMethod(typeNode);
-        createToKeyValuesMethod(typeNode);
-        JavacNode idFieldNode = createIdField(typeNode, idClass);
+        createToKeyValuesMethod(typeNode, idFieldNode);
+        JavacNode gizmoIdFieldNode = createIdField(typeNode, idClass);
         createElementField(typeNode);
         createGetElementMethod(typeNode);
-        createConstructor(typeNode, idFieldNode);
-        createGetIdMethod(typeNode, idClass, idFieldNode);
+        createConstructor(typeNode, gizmoIdFieldNode, idFieldNode);
+        createGetIdMethod(typeNode, idClass, gizmoIdFieldNode);
 
-        JCClassDecl type = (JCClassDecl) annotationNode.up().get();
-        java.util.List<JCAnnotation> annotations = filterOut(type.mods.annotations, Vertex.class);
-        type.mods.annotations = List.from(annotations);
-
-        System.out.println(typeNode);
-    }
-
-    private java.util.List<JCAnnotation> filterOut(List<JCAnnotation> annotations, Class<? extends Annotation> vertexClass) {
-        return annotations
-                .stream()
-                .filter(a -> !a.type.toString().equals(vertexClass.getName()))
-                .collect(Collectors.toList());
+//        System.out.println(typeNode);
     }
 
     /////////////////////////////
@@ -133,7 +124,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         classDeclaration.implementing = List.from(interfaces.toArray(new JCExpression[interfaces.size()]));
     }
 
-    private void createConstructor(JavacNode typeNode, JavacNode idFieldNode) {
+    private void createConstructor(JavacNode typeNode, JavacNode gizmoIdFieldNode, JavacNode fieldNode) {
         newMethod()
                 .name(CONSTRUCTOR_NAME)
                 .modifiers(PUBLIC)
@@ -144,7 +135,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                                 .isFinal(true)
                                 .buildWith(typeNode)
                 ))
-                .body(createConstructorBody(typeNode, idFieldNode))
+                .body(createConstructorBody(typeNode, gizmoIdFieldNode, fieldNode))
                 .returnType(Void.class.getName())
                 .injectInto(typeNode);
     }
@@ -193,13 +184,13 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                 .injectInto(typeNode);
     }
 
-    private void createToKeyValuesMethod(JavacNode typeNode) {
+    private void createToKeyValuesMethod(JavacNode typeNode, JavacNode idFieldNode) {
         newMethod()
                 .modifiers(PUBLIC)
                 .name(METHOD_NAME_TO_KEY_VALUES)
                 .returnType(Object.class.getName())
                 .returnTypeArray(true)
-                .body(createToKeyValuesBody(typeNode))
+                .body(createToKeyValuesBody(typeNode, idFieldNode))
                 .injectInto(typeNode);
     }
 
@@ -259,10 +250,11 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
     //////////////////////////////////////
     // AST manipulating - BODY CREATION //
     //////////////////////////////////////
-    private JCBlock createConstructorBody(JavacNode typeNode, JavacNode idFieldNode) {
+    private JCBlock createConstructorBody(JavacNode typeNode, JavacNode gizmoIdFieldNode, JavacNode idFieldNode) {
         JavacTreeMaker maker = typeNode.getTreeMaker();
         java.util.List<JCStatement> statements = Lists.newArrayList();
 
+        // this.element = element
         JCTree.JCExpressionStatement assignElement = maker.Exec(maker.Assign(getThisField(typeNode, FIELD_NAME_ELEMENT), maker.Ident(typeNode.toName("element"))));
         statements.add(assignElement);
 
@@ -270,10 +262,15 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         JCFieldAccess id = maker.Select(maker.Ident(typeNode.toName("element")), typeNode.toName("id"));
 
         // ([type]) element.id()
-        JCTypeCast castId = maker.TypeCast(((JCVariableDecl) idFieldNode.get()).vartype, maker.Apply(nil(), id, nil()));
+        JCTypeCast castId = maker.TypeCast(((JCVariableDecl) gizmoIdFieldNode.get()).vartype, maker.Apply(nil(), id, nil()));
 
-        // this.$id = element.id();
-        statements.add(maker.Exec(maker.Assign(getThisField(typeNode, idFieldNode.getName()), castId)));
+        // this.$id = ([type]) element.id();
+        statements.add(maker.Exec(maker.Assign(getThisField(typeNode, gizmoIdFieldNode.getName()), castId)));
+
+        if (idFieldNode != null) {
+            // this.[idField] = ([type]) element.id();
+            statements.add(maker.Exec(maker.Assign(getThisField(typeNode, idFieldNode.getName()), castId)));
+        }
 
         JCFieldAccess property = maker.Select(maker.Ident(typeNode.toName(PARAMETER_NAME_ELEMENT)), typeNode.toName("property"));
         getAccessorFields(typeNode)
@@ -336,7 +333,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         ));
     }
 
-    private JCBlock createToKeyValuesBody(JavacNode typeNode) {
+    private JCBlock createToKeyValuesBody(JavacNode typeNode, JavacNode idFieldNode) {
         JavacTreeMaker maker = typeNode.getTreeMaker();
         java.util.List<JCStatement> statements = new ArrayList<>();
 
@@ -362,17 +359,18 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         // arguments.add
         JCFieldAccess argumentsAdd = maker.Select(maker.Ident(typeNode.toName(VARIABLE_NAME_ARGUMENTS)), typeNode.toName("add"));
 
-        // TODO add id field to arguments???
         getFields(typeNode)
                 .stream()
                 .filter(field -> getterExists(typeNode, field))
                 .forEach(field -> {
-                    // arguments.add("fieldName"); arguments.add(field);
-                    JCMethodInvocation addKey = maker.Apply(nil(), argumentsAdd, List.of(maker.Literal(field.getName())));
-                    JCMethodInvocation addValue = maker.Apply(nil(), argumentsAdd, List.of(maker.Ident(typeNode.toName(field.getName()))));
+                    if (idFieldNode == null || !field.getName().equals(idFieldNode.getName())) {
+                        // arguments.add("fieldName"); arguments.add(field);
+                        JCMethodInvocation addKey = maker.Apply(nil(), argumentsAdd, List.of(maker.Literal(field.getName())));
+                        JCMethodInvocation addValue = maker.Apply(nil(), argumentsAdd, List.of(maker.Ident(typeNode.toName(field.getName()))));
 
-                    statements.add(maker.Exec(addKey));
-                    statements.add(maker.Exec(addValue));
+                        statements.add(maker.Exec(addKey));
+                        statements.add(maker.Exec(addValue));
+                    }
                 });
 
         // arguments.toArray()

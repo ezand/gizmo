@@ -6,6 +6,8 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.assertManageableBean;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getElement;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.massageArguments;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.validateArguments;
 import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.Arrays;
@@ -85,7 +87,12 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
             return update(bean);
         }
 
-        Vertex vertex = getGraph().addVertex(map(bean, getLabel()));
+        Object[] arguments = map(bean, getLabel());
+        Object[] filteredArguments = massageArguments(arguments).getLeft();
+
+        validateArguments(filteredArguments);
+
+        Vertex vertex = getGraph().addVertex(filteredArguments);
         return (B) map(vertex, beanClass);
     }
 
