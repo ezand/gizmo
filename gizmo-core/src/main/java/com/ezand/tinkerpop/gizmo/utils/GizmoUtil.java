@@ -59,11 +59,9 @@ public class GizmoUtil {
         return arguments;
     }
 
-    public static Pair<Object[], Set<String>> massageArguments(Object[] arguments) {
-        Set<String> keys = Sets.newHashSet();
+    public static Object[] removeEmptyArguments(Object[] arguments) {
         for (int i = 0; i < arguments.length; i += 2) {
             if (arguments[i + 1] == null) {
-                keys.add((String) arguments[i]);
                 arguments[i] = null;
             }
         }
@@ -72,7 +70,7 @@ public class GizmoUtil {
                 .filter(a -> a != null)
                 .collect(Collectors.toList());
 
-        return Pair.of(filteredArguments.toArray(new Object[filteredArguments.size()]), keys);
+        return filteredArguments.toArray(new Object[filteredArguments.size()]);
     }
 
     public static void validateArguments(Object[] arguments) {

@@ -6,7 +6,7 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.assertManageableBean;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getElement;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
-import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.massageArguments;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.removeEmptyArguments;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.validateArguments;
 import static com.google.common.collect.Sets.newHashSet;
 
@@ -88,7 +88,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
         }
 
         Object[] arguments = map(bean, getLabel());
-        Object[] filteredArguments = massageArguments(arguments).getLeft();
+        Object[] filteredArguments = removeEmptyArguments(arguments);
 
         validateArguments(filteredArguments);
 
@@ -120,7 +120,10 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
                     if (property.isPresent()) {
                         property.remove();
                     }
-                    element.property(e.getKey(), e.getValue());
+
+                    if (e.getValue() != null) {
+                        element.property(e.getKey(), e.getValue());
+                    }
                 });
 
         return bean;
