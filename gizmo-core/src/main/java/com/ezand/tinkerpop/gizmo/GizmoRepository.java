@@ -9,8 +9,8 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.removeEmptyArguments;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.validateArguments;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Arrays.stream;
 
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,7 +64,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     @SuppressWarnings("unchecked")
     @Override
     public void delete(ID... ids) {
-        Arrays.stream(ids).forEach(i -> getGraph().v(i).remove());
+        stream(ids).forEach(i -> getGraph().v(i).remove());
     }
 
     @Override
@@ -100,7 +100,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     @Override
     public Set<B> save(B... beans) {
         Set<B> saved = newHashSet();
-        Arrays.stream(beans).forEach(b -> saved.add(save(b)));
+        stream(beans).forEach(b -> saved.add(save(b)));
         return saved;
     }
 
@@ -133,7 +133,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     @Override
     public Set<B> update(B... beans) {
         Set<B> updated = newHashSet();
-        Arrays.stream(beans).forEach(b -> updated.add(update(b)));
+        stream(beans).forEach(b -> updated.add(update(b)));
         return updated;
     }
 

@@ -1,19 +1,24 @@
 package com.ezand.tinkerpop.gizmo;
 
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getId;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
+import static java.beans.Introspector.getBeanInfo;
+import static java.util.Arrays.stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.beans.PropertyDescriptor;
 import java.util.Set;
 
 import org.junit.Test;
 
 import com.google.common.reflect.TypeToken;
 import com.tinkerpop.gremlin.process.T;
+import com.tinkerpop.gremlin.structure.VertexProperty;
 
 public abstract class AbstractGizmoRepositoryTest<B> {
     protected final Class<? super B> beanClass = new TypeToken<B>(getClass()) {
@@ -140,6 +145,21 @@ public abstract class AbstractGizmoRepositoryTest<B> {
         createPersistedBean();
 
         assertThat(getRepository().count(getExampleBeanKeyValue()[0], getExampleBeanKeyValue()[1]), equalTo(1L));
+    }
+
+    @Test
+    public void should_remove_property_when_value_is_set_to_null() throws Exception {
+        B bean = createPersistedBean();
+
+        stream(getBeanInfo(bean.getClass()).getPropertyDescriptors())
+                .filter(pd -> pd.getName().equals(getExampleBeanKeyValue()[0]))
+                .findFirst()
+                .orElseThrow(RuntimeException::new)
+                .getWriteMethod().invoke(bean, new Object[]{null});
+
+        getRepository().update(bean);
+        VertexProperty<Object> property = getRepository().getGraph().v(getId(bean, Long.class)).property(getExampleBeanKeyValue()[0]);
+        assertThat(property.isPresent(), equalTo(false));
     }
 
     protected B createPersistedBean() {
