@@ -1,5 +1,6 @@
 package com.ezand.tinkerpop.gizmo;
 
+import static com.ezand.tinkerpop.gizmo.Names.CONSTRUCTOR_NAME;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.getDefaultValue;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
@@ -78,7 +79,7 @@ public class ASTUtil {
 
     public static Set<JavacNode> getConstructors(JavacNode typeNode) {
         return stream(typeNode.down())
-                .filter(n -> n.getKind().equals(METHOD) && n.getName().equals(Names.CONSTRUCTOR_NAME))
+                .filter(n -> n.getKind().equals(METHOD) && n.getName().equals(CONSTRUCTOR_NAME))
                 .collect(toSet());
     }
 

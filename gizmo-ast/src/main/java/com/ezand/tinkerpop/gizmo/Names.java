@@ -40,11 +40,20 @@ public final class Names {
     public static final String FIELD_NAME_PROPERTY_CHANGES = PREFIX_FIELD + "propertyChanges";
     public static final String FIELD_NAME_ELEMENT = PREFIX_FIELD + "element";
 
-    // Method names
+    // Prefixed method names
     public static final String METHOD_NAME_TO_KEY_VALUES = PREFIX_METHOD + "toKeyValues";
     public static final String METHOD_NAME_GET_ID = PREFIX_METHOD + "getId";
     public static final String METHOD_NAME_GET_PROPERTY_CHANGES = PREFIX_METHOD + "getPropertyChanges";
     public static final String METHOD_NAME_GET_ELEMENT = PREFIX_METHOD + "getElement";
+
+    // Method names
+    public static final String METHOD_NAME_PROPERTY_CHANGE = "propertyChange";
+    public static final String METHOD_NAME_PROPERTY = "property";
+    public static final String METHOD_NAME_OR_ELSE = "orElse";
+    public static final String METHOD_NAME_GET_CHANGES = "getChanges";
+    public static final String METHOD_NAME_ADD = "add";
+    public static final String METHOD_NAME_TO_ARRAY = "toArray";
+    public static final String METHOD_NAME_ID = "id";
 
     // Annotation parameter names
     public static final String ANNOTATION_PARAMETER_NAME_ID_CLASS = "idClass";
