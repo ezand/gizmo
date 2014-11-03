@@ -18,6 +18,7 @@ import static lombok.javac.Javac.CTC_BOT;
 import static lombok.javac.Javac.isPrimitive;
 import static lombok.javac.handlers.JavacHandlerUtil.MemberExistsResult.NOT_EXISTS;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
+import static lombok.javac.handlers.JavacHandlerUtil.hasAnnotation;
 import static lombok.javac.handlers.JavacHandlerUtil.toGetterName;
 import static lombok.javac.handlers.JavacHandlerUtil.toSetterName;
 
@@ -163,20 +164,12 @@ public class ASTUtil {
     public static JavacNode findIdField(JavacNode typeNode) {
         return getFields(typeNode)
                 .stream()
-                .filter(n -> hasAnnotation(n, Id.class))
+                .filter(n -> hasAnnotation(Id.class, n))
                 .findFirst()
                 .orElse(null);
     }
 
-    private static <A extends Annotation> boolean hasAnnotation(JavacNode fieldNode, Class<A> annotationClass) {
-        JCVariableDecl field = (JCVariableDecl) fieldNode.get();
-
-        for (JCAnnotation annotation : field.mods.annotations) {
-            if (annotation.type.toString().equals(annotationClass.getName())) {
-                return true;
-            }
-        }
-
-        return false;
+    public static boolean isIdField(JavacNode fieldNode, JavacNode idFieldNode) {
+        return idFieldNode != null && fieldNode.getName().equals(idFieldNode.getName());
     }
 }

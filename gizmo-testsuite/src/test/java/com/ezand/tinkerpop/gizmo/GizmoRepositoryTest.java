@@ -1,10 +1,14 @@
 package com.ezand.tinkerpop.gizmo;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
 import org.junit.Test;
 
 import com.ezand.tinkerpop.gizmo.helpers.beans.AnimalShelter;
 import com.ezand.tinkerpop.gizmo.helpers.repository.AnimalShelterRepository;
 import com.ezand.tinkerpop.gizmo.helpers.repository.NonManageableRepository;
+import com.google.common.collect.Sets;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
 public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelter> {
@@ -29,9 +33,16 @@ public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelt
         nonManageableRepository.save("Some string");
     }
 
+    @Test
+    public void should_not_store_relationship_fields_as_element_property() throws Exception {
+        AnimalShelter shelter = repository.save(new AnimalShelter(null, SHELTER_NAME, null, 1, Sets.newHashSet()));
+
+        assertThat(repository.getGraph().v(shelter.getId()).property("inhabitants").isPresent(), equalTo(false));
+    }
+
     @Override
     protected AnimalShelter createBean() {
-        return new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1);
+        return new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1, null);
     }
 
     @Override

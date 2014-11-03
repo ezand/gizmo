@@ -114,6 +114,6 @@ public class GizmoUtilTest {
     }
 
     private AnimalShelter getNonManagedBean() {
-        return new AnimalShelter(null, "My shelter", "Street 1, City", 1);
+        return new AnimalShelter(null, "My shelter", "Street 1, City", 1, null);
     }
 }

@@ -1,9 +1,5 @@
 package com.ezand.tinkerpop.gizmo.helpers.beans;
 
-import static com.tinkerpop.gremlin.structure.Direction.IN;
-
-import java.util.Set;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,15 +12,14 @@ import com.ezand.tinkerpop.gizmo.annotations.Vertex;
 @NoArgsConstructor
 @AllArgsConstructor
 @Vertex(idClass = Long.class)
-public class AnimalShelter {
+public class Dog {
     @Id
     Long id;
     String name;
-    String address;
-    int inhabitantCount;
+    String bread;
 
-    @Relationship(label = "inhabits", direction = IN)
-    Set<Dog> inhabitants;
+    @Relationship(label = "inhabits")
+    AnimalShelter animalShelter;
 
     @Override
     public boolean equals(Object o) {

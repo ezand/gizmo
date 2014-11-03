@@ -2,6 +2,7 @@ package com.ezand.tinkerpop.gizmo.utils;
 
 import static com.ezand.tinkerpop.gizmo.utils.GizmoMapper.map;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getId;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.removeEmptyArguments;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
@@ -10,6 +11,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import org.junit.Test;
 
 import com.ezand.tinkerpop.gizmo.helpers.beans.AnimalShelter;
+import com.google.common.collect.Sets;
 import com.tinkerpop.gremlin.structure.Vertex;
 import com.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 
@@ -28,8 +30,8 @@ public class GizmoMapperTest {
 
     @Test
     public void should_map_bean_to_key_values() throws Exception {
-        AnimalShelter animalShelter = new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1);
-        Object[] keyValues = map(animalShelter, AnimalShelter.class.getName());
+        AnimalShelter animalShelter = new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1, Sets.newHashSet());
+        Object[] keyValues = removeEmptyArguments(map(animalShelter, AnimalShelter.class.getName()));
 
         assertThat(keyValues, notNullValue());
         assertThat(keyValues.length, greaterThan(0));

@@ -8,6 +8,7 @@ import static com.ezand.tinkerpop.gizmo.ASTUtil.getDefaultASTValue;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getFields;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getThisField;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getterExists;
+import static com.ezand.tinkerpop.gizmo.ASTUtil.isIdField;
 import static com.ezand.tinkerpop.gizmo.FieldBuilder.newField;
 import static com.ezand.tinkerpop.gizmo.MethodBuilder.newMethod;
 import static com.ezand.tinkerpop.gizmo.Names.ANNOTATION_PARAMETER_NAME_ID_CLASS;
@@ -32,6 +33,7 @@ import static com.sun.tools.javac.tree.JCTree.JCAssign;
 import static com.sun.tools.javac.tree.JCTree.JCBlock;
 import static com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
+import static com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import static com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import static com.sun.tools.javac.tree.JCTree.JCIdent;
 import static com.sun.tools.javac.tree.JCTree.JCIf;
@@ -47,6 +49,7 @@ import static com.sun.tools.javac.util.List.nil;
 import static java.util.stream.Collectors.toSet;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDots;
 import static lombok.javac.handlers.JavacHandlerUtil.chainDotsString;
+import static lombok.javac.handlers.JavacHandlerUtil.hasAnnotation;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -61,11 +64,11 @@ import lombok.javac.JavacTreeMaker;
 
 import org.mangosdk.spi.ProviderFor;
 
+import com.ezand.tinkerpop.gizmo.annotations.Relationship;
 import com.ezand.tinkerpop.gizmo.annotations.Vertex;
 import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 import com.ezand.tinkerpop.gizmo.structure.PropertyChanges;
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.tinkerpop.gremlin.structure.Element;
@@ -98,7 +101,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         createConstructor(typeNode, gizmoIdFieldNode, idFieldNode);
         createGetIdMethod(typeNode, idClass, gizmoIdFieldNode);
 
-//        System.out.println(typeNode);
+        System.out.println(typeNode);
     }
 
     /////////////////////////////
@@ -255,7 +258,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         java.util.List<JCStatement> statements = Lists.newArrayList();
 
         // this.element = element
-        JCTree.JCExpressionStatement assignElement = maker.Exec(maker.Assign(getThisField(typeNode, FIELD_NAME_ELEMENT), maker.Ident(typeNode.toName("element"))));
+        JCExpressionStatement assignElement = maker.Exec(maker.Assign(getThisField(typeNode, FIELD_NAME_ELEMENT), maker.Ident(typeNode.toName("element"))));
         statements.add(assignElement);
 
         // element.id
@@ -267,14 +270,16 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
         // this.$id = ([type]) element.id();
         statements.add(maker.Exec(maker.Assign(getThisField(typeNode, gizmoIdFieldNode.getName()), castId)));
 
+        final String idFieldNodeName = idFieldNode == null ? null : idFieldNode.getName();
         if (idFieldNode != null) {
-            // this.[idField] = ([type]) element.id();
-            statements.add(maker.Exec(maker.Assign(getThisField(typeNode, idFieldNode.getName()), castId)));
+            // this.[idField] = this.$id;
+            statements.add(maker.Exec(maker.Assign(getThisField(typeNode, idFieldNodeName), getThisField(typeNode, gizmoIdFieldNode.getName()))));
         }
 
         JCFieldAccess property = maker.Select(maker.Ident(typeNode.toName(PARAMETER_NAME_ELEMENT)), typeNode.toName("property"));
         getAccessorFields(typeNode)
                 .stream()
+                .filter(f -> !f.getName().equals(idFieldNodeName) && !hasAnnotation(Relationship.class, f))
                 .forEach(f -> {
                     // this.field
                     JCFieldAccess field = getThisField(typeNode, f.getName());
@@ -363,7 +368,7 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                 .stream()
                 .filter(field -> getterExists(typeNode, field))
                 .forEach(field -> {
-                    if (idFieldNode == null || !field.getName().equals(idFieldNode.getName())) {
+                    if (!isIdField(field, idFieldNode) && !hasAnnotation(Relationship.class, field)) {
                         // arguments.add("fieldName"); arguments.add(field);
                         JCMethodInvocation addKey = maker.Apply(nil(), argumentsAdd, List.of(maker.Literal(field.getName())));
                         JCMethodInvocation addValue = maker.Apply(nil(), argumentsAdd, List.of(maker.Ident(typeNode.toName(field.getName()))));
