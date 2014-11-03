@@ -35,8 +35,6 @@ import static com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
 import static com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import static com.sun.tools.javac.tree.JCTree.JCFieldAccess;
-import static com.sun.tools.javac.tree.JCTree.JCIdent;
-import static com.sun.tools.javac.tree.JCTree.JCIf;
 import static com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import static com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import static com.sun.tools.javac.tree.JCTree.JCNewClass;
@@ -70,9 +68,7 @@ import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 import com.ezand.tinkerpop.gizmo.structure.PropertyChanges;
 import com.google.common.collect.Lists;
 import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Name;
 import com.tinkerpop.gremlin.structure.Element;
-import com.tinkerpop.gremlin.structure.Property;
 
 @ProviderFor(JavacAnnotationHandler.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -281,41 +277,24 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                 .stream()
                 .filter(f -> !f.getName().equals(idFieldNodeName) && !hasAnnotation(Relationship.class, f))
                 .forEach(f -> {
-                    // this.field
-                    JCFieldAccess field = getThisField(typeNode, f.getName());
-
                     JCVariableDecl fieldDeclaration = (JCVariableDecl) f.get();
-                    Name fieldProperty = typeNode.toName(f.getName() + "Property");
-                    JCIdent fieldPropertyIdentity = maker.Ident(fieldProperty);
 
                     // element.property(field)
                     JCMethodInvocation elementProperty = maker.Apply(nil(), property, List.of(maker.Literal(f.getName())));
 
-                    // Property property = element.property(field)
-                    JCVariableDecl propertyVariable = maker.VarDef(maker.Modifiers(FINAL), fieldProperty, chainDots(typeNode, splitNameOf(Property.class)), elementProperty);
+                    // element.property(field).orElse
+                    JCFieldAccess orElse = maker.Select(elementProperty, typeNode.toName("orElse"));
 
-                    // property.isPresent()
-                    JCMethodInvocation isPresent = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("isPresent")), nil());
+                    // element.property(field).orElse([default_value])
+                    JCMethodInvocation applyOrElse = maker.Apply(nil(), orElse, List.of(getDefaultASTValue(f)));
 
-                    // property.value()
-                    JCMethodInvocation value = maker.Apply(nil(), maker.Select(fieldPropertyIdentity, typeNode.toName("value")), nil());
+                    // ([type]) element.property(field).orElse([default_value])
+                    JCTypeCast typeCast = maker.TypeCast(fieldDeclaration.vartype, applyOrElse);
 
-                    // (Type) property.value()
-                    JCTypeCast cast = maker.TypeCast(fieldDeclaration.vartype, value);
+                    // this.field = ([type]) element.property(field).orElse([default_value])
+                    JCAssign assign = maker.Assign(getThisField(typeNode, f.getName()), typeCast);
 
-                    // this.field = property.value()
-                    JCAssign assignValue = maker.Assign(chainDotsString(typeNode, "this." + f.getName()), cast);
-
-                    // this.field = [default_value_for_type]
-                    JCAssign assignDefaultValue = maker.Assign(chainDotsString(typeNode, "this." + f.getName()), getDefaultASTValue(f));
-
-                    // if(property.isPresent() this.field = [value] else this.field = [default_value])
-                    JCIf anIf = maker.If(isPresent, maker.Exec(assignValue), maker.Exec(assignDefaultValue));
-
-                    statements.add(propertyVariable);
-                    statements.add(anIf);
-
-                    maker.Assign(field, null);
+                    statements.add(maker.Exec(assign));
                 });
 
         return maker.Block(0, List.from(statements));
