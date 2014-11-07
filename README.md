@@ -3,8 +3,7 @@ __OMG it's an OGM for TinkerPop 3!__
 Gizmo
 =====
 
-Gizmo is an Object Graph Modelling (OGM) framework for TinkerPop 3 using annotations to weave your POJOs to 
-the TinkerPop 3 functionality.
+Gizmo is an Object Graph Modelling (OGM) framework for TinkerPop 3 using annotations to bootstrap your POJOs to TinkerPop 3.
 
 Usage
 =====
