@@ -10,8 +10,30 @@ Usage
 =====
 ```
 @Vertex
-public class PetShop {
+public class AnimalShelter {
   private String name;
+  
+  @Relationship(label = "owns", direction = Direction.IN)
+  private Person owner;
+  
+  // Getters and setters
+}
+
+@Vertex
+public class Animal {
+  @Id
+  private Long id;
+  
+  @Relationship(label = "inhabits")
+  private AnimalShelter shelter;
+  
+  // Getters and setters
+}
+
+@Vertex
+public class Person {
+  @Relationship(label = "owns")
+  private AnimalShelter shelter;
   
   // Getters and setters
 }
