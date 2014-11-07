@@ -1,6 +1,6 @@
 package com.ezand.tinkerpop.gizmo.helpers.beans;
 
-import static com.tinkerpop.gremlin.structure.Direction.IN;
+import static com.ezand.tinkerpop.gizmo.structure.Direction.IN;
 
 import java.util.Set;
 
@@ -18,13 +18,13 @@ import com.ezand.tinkerpop.gizmo.annotations.Vertex;
 @Vertex(idClass = Long.class)
 public class AnimalShelter {
     @Id
-    Long id;
-    String name;
-    String address;
-    int inhabitantCount;
+    private Long id;
+    private String name;
+    private String address;
+    private int inhabitantCount;
 
     @Relationship(label = "inhabits", direction = IN)
-    Set<Dog> inhabitants;
+    private Set<Dog> inhabitants;
 
     @Override
     public boolean equals(Object o) {
@@ -34,5 +34,17 @@ public class AnimalShelter {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("AnimalShelter{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", address='").append(address).append('\'');
+        sb.append(", inhabitantCount=").append(inhabitantCount);
+        sb.append(", inhabitants=").append(inhabitants);
+        sb.append('}');
+        return sb.toString();
     }
 }

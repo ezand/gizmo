@@ -1,5 +1,6 @@
 package com.ezand.tinkerpop.gizmo;
 
+import static com.ezand.tinkerpop.gizmo.ASTUtil.typed;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
 import static com.sun.tools.javac.tree.JCTree.JCVariableDecl;
@@ -30,6 +31,7 @@ public class FieldBuilder {
     private JCExpression defaultValue;
     private List<JCAnnotation> annotations;
     private long modifiers;
+    private List<Class<?>> typeArgs;
 
     public FieldBuilder annotations(JCAnnotation... annotations) {
         this.annotations = List.from(annotations);
@@ -42,10 +44,16 @@ public class FieldBuilder {
 
     public JCVariableDecl buildWith(JavacNode typeNode) {
         JavacTreeMaker maker = typeNode.getTreeMaker();
+
+        JCExpression returnTypeExpression = chainDotsString(typeNode, type);
+        if (typeArgs != null && !typeArgs.isEmpty()) {
+            returnTypeExpression = typed(typeNode, returnTypeExpression, typeArgs.toArray(new Class[typeArgs.size()]));
+        }
+
         return maker.VarDef(
                 maker.Modifiers(modifiers, annotations != null ? annotations : nil()),
                 typeNode.toName(name),
-                chainDotsString(typeNode, type),
+                returnTypeExpression,
                 defaultValue);
     }
 

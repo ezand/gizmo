@@ -14,12 +14,12 @@ import com.ezand.tinkerpop.gizmo.annotations.Vertex;
 @Vertex(idClass = Long.class)
 public class Dog {
     @Id
-    Long id;
-    String name;
-    String bread;
+    private Long id;
+    private String name;
+    private String bread;
 
     @Relationship(label = "inhabits")
-    AnimalShelter animalShelter;
+    private AnimalShelter animalShelter;
 
     @Override
     public boolean equals(Object o) {
@@ -29,5 +29,16 @@ public class Dog {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Dog{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", bread='").append(bread).append('\'');
+        sb.append(", animalShelter=").append(animalShelter);
+        sb.append('}');
+        return sb.toString();
     }
 }

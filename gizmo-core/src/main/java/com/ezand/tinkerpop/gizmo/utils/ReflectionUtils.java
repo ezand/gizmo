@@ -1,11 +1,16 @@
 package com.ezand.tinkerpop.gizmo.utils;
 
+import static com.ezand.tinkerpop.gizmo.utils.Exceptions.classLoadingException;
 import static com.ezand.tinkerpop.gizmo.utils.Exceptions.elementConstructorNotFoundException;
 import static com.ezand.tinkerpop.gizmo.utils.Exceptions.instantiationException;
+import static com.ezand.tinkerpop.gizmo.utils.Exceptions.methodInvocationException;
 import static com.google.common.collect.Maps.newIdentityHashMap;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import com.tinkerpop.gremlin.structure.Element;
@@ -29,11 +34,36 @@ public class ReflectionUtils {
         }
     }
 
-    public static <T> T createInstance(Constructor<T> constructor, Object... arguments) {
+    public static <B> B createInstance(Constructor<B> constructor, Object... arguments) {
         try {
             return constructor.newInstance(arguments);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw instantiationException(constructor.getDeclaringClass().getName());
+        }
+    }
+
+    public static <A extends Annotation> A getFieldAnnotation(Class<?> clazz, String fieldName, Class<A> annotationClass) {
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            return field.getDeclaredAnnotation(annotationClass);
+        } catch (NoSuchFieldException e) {
+            return null;
+        }
+    }
+
+    public static Class<?> loadClass(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw classLoadingException(className);
+        }
+    }
+
+    public static Object invokeMethod(Method method, Object target, Object... arguments) {
+        try {
+            return method.invoke(target, arguments);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw methodInvocationException(method.getDeclaringClass(), method, arguments);
         }
     }
 

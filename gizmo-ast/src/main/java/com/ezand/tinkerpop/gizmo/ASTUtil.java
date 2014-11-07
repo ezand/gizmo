@@ -3,6 +3,7 @@ package com.ezand.tinkerpop.gizmo;
 import static com.ezand.tinkerpop.gizmo.Names.CONSTRUCTOR_NAME;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.getDefaultValue;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.sun.tools.javac.code.Symbol.TypeSymbol;
 import static com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import static com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import static com.sun.tools.javac.tree.JCTree.JCExpression;
@@ -28,11 +29,14 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.lang.model.type.DeclaredType;
 import lombok.javac.JavacNode;
 import lombok.javac.JavacTreeMaker;
 import lombok.javac.handlers.JavacHandlerUtil;
 
 import com.ezand.tinkerpop.gizmo.annotations.Id;
+import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.util.List;
 
 public class ASTUtil {
@@ -48,13 +52,13 @@ public class ASTUtil {
         return !JavacHandlerUtil.methodExists(methodName, node, parameterCount).equals(NOT_EXISTS);
     }
 
-    public static Object getAnnotationParameterValue(JCAnnotation annotation, String parameterName) {
+    public static Object getAnnotationParameterValue(JCAnnotation annotation, String parameterName, Object defaultValue) {
         return annotation.attribute.getElementValues().entrySet()
                 .stream()
                 .filter(e -> e.getKey().name.toString().equals(parameterName))
                 .map(e -> e.getValue().getValue())
                 .findFirst()
-                .orElse(null);
+                .orElse(defaultValue);
     }
 
     public static Set<JavacNode> getFields(JavacNode typeNode) {
@@ -172,5 +176,31 @@ public class ASTUtil {
 
     public static boolean isIdField(JavacNode fieldNode, JavacNode idFieldNode) {
         return idFieldNode != null && fieldNode.getName().equals(idFieldNode.getName());
+    }
+
+    public static <A extends Annotation> JCAnnotation getAnnotation(List<JCAnnotation> annotations, Class<A> annotation) {
+        return annotations.stream()
+                .filter(a -> a.annotationType.type.toString().equals(annotation.getTypeName()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static boolean isCollection(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type) {
+        return isAssignable(typesUtil, elementUtils, type, "java.util.Collection");
+    }
+
+    public static boolean isList(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type) {
+        return isAssignable(typesUtil, elementUtils, type, "java.util.List");
+    }
+
+    public static boolean isSet(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type) {
+        return isAssignable(typesUtil, elementUtils, type, "java.util.Set");
+    }
+
+    private static boolean isAssignable(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type, String collectionInterface) {
+        DeclaredType collectionType = typesUtil.getDeclaredType(
+                elementUtils.getTypeElement(collectionInterface),
+                typesUtil.getWildcardType(null, null));
+        return typesUtil.isAssignable(type.asType(), collectionType);
     }
 }

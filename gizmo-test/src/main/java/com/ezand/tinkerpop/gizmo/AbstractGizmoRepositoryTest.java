@@ -1,6 +1,5 @@
 package com.ezand.tinkerpop.gizmo;
 
-import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getChanges;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.getId;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
 import static java.beans.Introspector.getBeanInfo;
@@ -11,7 +10,6 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.beans.PropertyDescriptor;
 import java.util.Set;
 
 import org.junit.Test;

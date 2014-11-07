@@ -39,6 +39,7 @@ public final class Names {
     public static final String FIELD_NAME_ID = PREFIX_FIELD + "id";
     public static final String FIELD_NAME_PROPERTY_CHANGES = PREFIX_FIELD + "propertyChanges";
     public static final String FIELD_NAME_ELEMENT = PREFIX_FIELD + "element";
+    public static final String FIELD_NAME_ALREADY_FETCHED = PREFIX_FIELD + "alreadyFetched";
 
     // Prefixed method names
     public static final String METHOD_NAME_TO_KEY_VALUES = PREFIX_METHOD + "toKeyValues";
@@ -54,12 +55,24 @@ public final class Names {
     public static final String METHOD_NAME_ADD = "add";
     public static final String METHOD_NAME_TO_ARRAY = "toArray";
     public static final String METHOD_NAME_ID = "id";
+    public static final String METHOD_NAME_NEXT = "next";
+    public static final String METHOD_NAME_RESOLVE_BEAN_CLASS = "resolveBeanClass";
+    public static final String METHOD_NAME_CONTAINS = "contains";
+    public static final String METHOD_NAME_MAP = "map";
+    public static final String METHOD_NAME_HAS_NEXT = "hasNext";
+    public static final String METHOD_NAME_NON_PREFIX_GET_ELEMENT = "getElement";
 
     // Annotation parameter names
     public static final String ANNOTATION_PARAMETER_NAME_ID_CLASS = "idClass";
+    public static final String ANNOTATION_PARAMETER_NAME_LABEL = "label";
+    public static final String ANNOTATION_PARAMETER_NAME_DIRECTION = "direction";
+    public static final String ANNOTATION_PARAMETER_NAME_CASCADE = "cascade";
+    public static final String ANNOTATION_PARAMETER_NAME_FETCH_MODE = "fetchMode";
 
     // Variables names
     public static final String VARIABLE_NAME_ARGUMENTS = "arguments";
+    public static final String VARIABLE_NAME_NEXT = "next";
+    public static final String VARIABLE_NAME_VERTEX = "vertex";
 
     // Parameter names
     public static final String PARAMETER_NAME_ELEMENT = "element";

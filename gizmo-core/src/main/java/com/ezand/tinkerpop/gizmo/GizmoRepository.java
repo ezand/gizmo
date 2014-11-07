@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.reflect.TypeToken;
+import com.tinkerpop.gremlin.process.T;
 import com.tinkerpop.gremlin.process.Traversal;
 import com.tinkerpop.gremlin.process.graph.GraphTraversal;
 import com.tinkerpop.gremlin.structure.Element;
@@ -26,11 +27,13 @@ import com.tinkerpop.gremlin.structure.Vertex;
 public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     protected final Graph graph;
     protected final Class<? super B> beanClass;
+//    protected final Map<String, RelationshipAccessors> accessors;
 
     protected GizmoRepository(Graph graph) {
-        this.graph = graph;
         this.beanClass = new TypeToken<B>(getClass()) {
         }.getRawType();
+        this.graph = graph;
+//        this.accessors = getRelationshipMethods(beanClass);
     }
 
     public Graph getGraph() {
@@ -153,7 +156,7 @@ public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     }
 
     protected GraphTraversal<Vertex, Element> getClassTypeTraversal() {
-        return getGraph().V().has(com.tinkerpop.gremlin.process.T.label, getLabel());
+        return getGraph().V().has(T.label, getLabel());
     }
 
     @SuppressWarnings("unchecked")

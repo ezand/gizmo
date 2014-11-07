@@ -30,7 +30,7 @@ public class ParameterBuilder {
             flags |= FINAL;
         }
 
-        return maker.VarDef(maker.Modifiers(flags), typeNode.toName(name), chainDotsString(typeNode, type), null);
+        return maker.VarDef(maker.Modifiers(flags), typeNode.toName(name), type != null ? chainDotsString(typeNode, type) : null, null);
     }
 
     public static ParameterBuilder newParameter() {

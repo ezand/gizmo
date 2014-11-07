@@ -9,6 +9,7 @@ import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManageable;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.isManaged;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.prependLabelArguments;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.removeEmptyArguments;
+import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.resolveBeanClass;
 import static com.ezand.tinkerpop.gizmo.utils.GizmoUtil.validateArguments;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -107,6 +108,18 @@ public class GizmoUtilTest {
     @Test
     public void argument_validation_should_pass_for_T_type_argument_keys() throws Exception {
         validateArguments(new Object[]{T.label, AnimalShelter.class.getName()});
+    }
+
+    @Test
+    public void should_load_class_from_element_label() throws Exception {
+        TinkerGraph graph = TinkerGraph.open();
+        AnimalShelter save = new AnimalShelterRepository(graph).save(getNonManagedBean());
+
+        Element element = getElement(save);
+        Class<?> elementClass = resolveBeanClass(element);
+
+        assertThat(elementClass, notNullValue());
+        assertThat(elementClass.getName(), equalTo(AnimalShelter.class.getName()));
     }
 
     private AnimalShelter getManagedBean() {

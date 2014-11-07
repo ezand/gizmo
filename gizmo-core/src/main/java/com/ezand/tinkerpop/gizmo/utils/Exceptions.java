@@ -2,6 +2,8 @@ package com.ezand.tinkerpop.gizmo.utils;
 
 import static java.lang.String.format;
 
+import java.lang.reflect.Method;
+
 import com.ezand.tinkerpop.gizmo.structure.GizmoElement;
 import com.tinkerpop.gremlin.process.T;
 
@@ -33,5 +35,17 @@ public class Exceptions {
 
     public static RuntimeException invalidArgumentKeyException(Class<?> clazz) {
         return new RuntimeException(format("Argument key must be an instance of %s or %s, actual type is %s", String.class.getName(), T.class.getName(), clazz.toString()));
+    }
+
+    public static RuntimeException beanInspectionException(Class<?> clazz) {
+        return new RuntimeException(format("An error occurred while getting bean description for class %s", clazz.getName()));
+    }
+
+    public static RuntimeException methodInvocationException(Class<?> clazz, Method method, Object... arguments) {
+        return new RuntimeException(format("Could not execute method %s on class %s with arguments %s", method.getName(), clazz.getName(), arguments));
+    }
+
+    public static RuntimeException classLoadingException(String className) {
+        return new RuntimeException(format("Unable to load class %s", className));
     }
 }

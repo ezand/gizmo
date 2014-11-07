@@ -3,6 +3,7 @@ package com.ezand.tinkerpop.gizmo.utils;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.createInstance;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.findElementConstructor;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.getDefaultValue;
+import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.loadClass;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -44,6 +45,14 @@ public class ReflectionUtilsTest {
     public void should_throw_exception_when_constructor_argument_is_missing() throws Exception {
         Constructor<AnimalShelter> constructor = findElementConstructor(AnimalShelter.class);
         createInstance(constructor);
+    }
+
+    @Test
+    public void should_load_class() throws Exception {
+        Class<?> clazz = loadClass(AnimalShelter.class.getName());
+
+        assertThat(clazz, notNullValue());
+        assertThat(clazz.getName(), equalTo(AnimalShelter.class.getName()));
     }
 
     @Test
