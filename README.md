@@ -57,3 +57,27 @@ public class PersonRepository extends GizmoRepository<Person, Long> {
   }
 }
 ```
+
+```
+// Find
+Set<Animal> animals = animalRepository.find();
+Animal animal = animalRepository.find(123L);
+Set<Animal> animals = animalRepository.find("name", "Fido");
+
+// Delete
+animalRepository.delete(123L, 321L);
+animalRepository.delete(animal);
+
+// Save
+Animal animal = animalRepository.save(animal);
+Set<Animal> animals = animalRepository.save(animal, someOtherAnimal);
+
+// Update
+Animal animalRepository.update(animal);
+Set<Animal> animals = animalRepository.update(animal, someOtherAnimal);
+
+// Count
+long count = animalRepository.count();
+long count = animalRepository.count("name);
+long count = animalRepository.count("name", "Fido");
+```
