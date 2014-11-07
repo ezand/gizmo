@@ -1,0 +1,1 @@
+__Due to annotation processing and cyclic dependencies, unit tests are in a separate module.__
