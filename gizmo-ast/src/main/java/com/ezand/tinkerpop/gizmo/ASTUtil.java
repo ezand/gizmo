@@ -1,6 +1,8 @@
 package com.ezand.tinkerpop.gizmo;
 
+import static com.ezand.tinkerpop.gizmo.Names.ANNOTATION_PARAMETER_NAME_FETCH_MODE;
 import static com.ezand.tinkerpop.gizmo.Names.CONSTRUCTOR_NAME;
+import static com.ezand.tinkerpop.gizmo.structure.FetchMode.LAZY;
 import static com.ezand.tinkerpop.gizmo.utils.ReflectionUtils.getDefaultValue;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.sun.tools.javac.code.Symbol.TypeSymbol;
@@ -35,6 +37,8 @@ import lombok.javac.JavacTreeMaker;
 import lombok.javac.handlers.JavacHandlerUtil;
 
 import com.ezand.tinkerpop.gizmo.annotations.Id;
+import com.ezand.tinkerpop.gizmo.annotations.Relationship;
+import com.ezand.tinkerpop.gizmo.structure.FetchMode;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.util.List;
@@ -195,6 +199,22 @@ public class ASTUtil {
 
     public static boolean isSet(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type) {
         return isAssignable(typesUtil, elementUtils, type, "java.util.Set");
+    }
+
+    public static Set<JavacNode> getRelationshipFields(JavacNode typeNode) {
+        return stream(typeNode.down())
+                .filter(f -> hasAnnotation(Relationship.class, f))
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<JavacNode> getRelationshipFields(JavacNode typeNode, FetchMode fetchMode) {
+        return getRelationshipFields(typeNode)
+                .stream()
+                .filter(f -> {
+                    JCAnnotation annotation = getAnnotation(((JCVariableDecl) f.get()).mods.annotations, Relationship.class);
+                    return FetchMode.valueOf(getAnnotationParameterValue(annotation, ANNOTATION_PARAMETER_NAME_FETCH_MODE, LAZY).toString()).equals(fetchMode);
+                })
+                .collect(Collectors.toSet());
     }
 
     private static boolean isAssignable(JavacTypes typesUtil, JavacElements elementUtils, TypeSymbol type, String collectionInterface) {

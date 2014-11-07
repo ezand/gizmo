@@ -8,6 +8,7 @@ import static com.ezand.tinkerpop.gizmo.ASTUtil.getAnnotation;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getAnnotationParameterValue;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getDefaultASTValue;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getFields;
+import static com.ezand.tinkerpop.gizmo.ASTUtil.getRelationshipFields;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getThisField;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.getterExists;
 import static com.ezand.tinkerpop.gizmo.ASTUtil.isCollection;
@@ -30,13 +31,13 @@ import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_ADD;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_CONTAINS;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_GET_CHANGES;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_GET_ELEMENT;
-import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_NON_PREFIX_GET_ELEMENT;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_GET_ID;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_GET_PROPERTY_CHANGES;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_HAS_NEXT;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_ID;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_MAP;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_NEXT;
+import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_NON_PREFIX_GET_ELEMENT;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_OR_ELSE;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_PROPERTY;
 import static com.ezand.tinkerpop.gizmo.Names.METHOD_NAME_PROPERTY_CHANGE;
@@ -65,7 +66,6 @@ import static com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import static com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import static com.sun.tools.javac.tree.JCTree.JCIdent;
 import static com.sun.tools.javac.tree.JCTree.JCIf;
-import static com.sun.tools.javac.tree.JCTree.JCLambda;
 import static com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import static com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import static com.sun.tools.javac.tree.JCTree.JCNewClass;
@@ -86,7 +86,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
@@ -111,11 +110,9 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.tinkerpop.gremlin.process.graph.GraphTraversal;
 import com.tinkerpop.gremlin.structure.Element;
-import com.tinkerpop.gremlin.util.StreamFactory;
 
 @ProviderFor(JavacAnnotationHandler.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -320,9 +317,8 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
     private void modifyRelationshipGetters(JavacNode typeNode) {
         JavacTreeMaker maker = typeNode.getTreeMaker();
 
-        getFields(typeNode)
+        getRelationshipFields(typeNode)
                 .stream()
-                .filter(f -> hasAnnotation(Relationship.class, f))
                 .forEach(f -> {
                     JCVariableDecl field = (JCVariableDecl) f.get();
                     JavacNode getterMethod = findGetter(typeNode, f);
@@ -532,6 +528,15 @@ public class VertexHandler extends JavacAnnotationHandler<Vertex> {
                     JCAssign assign = maker.Assign(getThisField(typeNode, f.getName()), typeCast);
 
                     statements.add(maker.Exec(assign));
+                });
+
+        getRelationshipFields(typeNode, FetchMode.EAGER)
+                .stream()
+                .forEach(f -> {
+                    JavacNode getter = findGetter(typeNode, f);
+
+                    // get[field]()
+                    statements.add(maker.Exec(maker.Apply(nil(), maker.Ident(typeNode.toName(getter.getName())), nil())));
                 });
 
         return maker.Block(0, List.from(statements));

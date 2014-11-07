@@ -1,5 +1,7 @@
 package com.ezand.tinkerpop.gizmo.helpers.beans;
 
+import static com.ezand.tinkerpop.gizmo.structure.FetchMode.EAGER;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +20,7 @@ public class Dog {
     private String name;
     private String bread;
 
-    @Relationship(label = "inhabits")
+    @Relationship(label = "inhabits", fetchMode = EAGER)
     private AnimalShelter animalShelter;
 
     @Override

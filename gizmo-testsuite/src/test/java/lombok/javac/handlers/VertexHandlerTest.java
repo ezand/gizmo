@@ -69,11 +69,10 @@ public class VertexHandlerTest extends AbstractGizmoElementTest<AnimalShelter> {
         assertThat(((Set) alreadyFetched.get(fetchedShelter)).size(), equalTo(1));
         assertThat((Set) inhabitants.get(fetchedShelter), notNullValue(Set.class));
         assertThat(((Set) inhabitants.get(fetchedShelter)).size(), equalTo(3));
-        System.out.println(fetchedShelter);
     }
 
     @Test
-    public void should_fetch_single_relationship() throws Exception {
+    public void should_fetch_single_eager_relationship() throws Exception {
         AnimalShelter shelter = createAnimalShelter();
         Dog dog = createDog("Fido");
 
@@ -91,10 +90,8 @@ public class VertexHandlerTest extends AbstractGizmoElementTest<AnimalShelter> {
         Field alreadyFetched = Dog.class.getDeclaredField("$alreadyFetched");
         alreadyFetched.setAccessible(true);
 
-        assertThat(field.get(fetchedDog), nullValue());
-        fetchedDog.getAnimalShelter();
-        assertThat(((Set) alreadyFetched.get(fetchedDog)).size(), equalTo(1));
         assertThat(field.get(fetchedDog), notNullValue());
+        assertThat(((Set) alreadyFetched.get(fetchedDog)).size(), equalTo(1));
     }
 
     private Dog createDog(String name) {
