@@ -81,3 +81,14 @@ long count = animalRepository.count();
 long count = animalRepository.count("name);
 long count = animalRepository.count("name", "Fido");
 ```
+
+```
+Graph graph = ...;
+
+// Map vertex to bean
+Vertex animalVertex = graph.v(123L);
+Animal animal = GizmoMapper.map(animalVertex, Animal.class);
+
+// Map bean to vertex arguments
+Vertex animalVertex = graph.addVertex(GizmoMapper.map(animal), Animal.class.getName());
+```
