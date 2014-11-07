@@ -40,8 +40,20 @@ public class Person {
 ```
 
 ```
-public class AnimalShelterRepository extends GizmoRepository<PetShop, Long> {
+public class AnimalShelterRepository extends GizmoRepository<AnimalShelter, Long> {
   public AnimalShelterRepository(GizmoGraph graph) {
+    super(graph);
+  }
+}
+
+public class AnimalRepository extends GizmoRepository<Animal, Long> {
+  public AnimalRepository(GizmoGraph graph) {
+    super(graph);
+  }
+}
+
+public class PersonRepository extends GizmoRepository<Person, Long> {
+  public PersonRepository(GizmoGraph graph) {
     super(graph);
   }
 }
