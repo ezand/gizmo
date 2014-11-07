@@ -27,13 +27,11 @@ import com.tinkerpop.gremlin.structure.Vertex;
 public abstract class GizmoRepository<B, ID> implements CRUDRespository<B, ID> {
     protected final Graph graph;
     protected final Class<? super B> beanClass;
-//    protected final Map<String, RelationshipAccessors> accessors;
 
     protected GizmoRepository(Graph graph) {
         this.beanClass = new TypeToken<B>(getClass()) {
         }.getRawType();
         this.graph = graph;
-//        this.accessors = getRelationshipMethods(beanClass);
     }
 
     public Graph getGraph() {

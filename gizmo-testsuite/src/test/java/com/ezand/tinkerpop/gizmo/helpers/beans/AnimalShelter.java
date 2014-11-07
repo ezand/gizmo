@@ -1,6 +1,7 @@
 package com.ezand.tinkerpop.gizmo.helpers.beans;
 
 import static com.ezand.tinkerpop.gizmo.structure.Direction.IN;
+import static com.ezand.tinkerpop.gizmo.structure.FetchMode.EAGER;
 
 import java.util.Set;
 
@@ -25,6 +26,9 @@ public class AnimalShelter {
 
     @Relationship(label = "inhabits", direction = IN)
     private Set<Dog> inhabitants;
+
+    @Relationship(label = "owned_by", fetchMode = EAGER)
+    private Owner owner;
 
     @Override
     public boolean equals(Object o) {

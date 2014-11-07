@@ -35,14 +35,14 @@ public class GizmoRepositoryTest extends AbstractGizmoRepositoryTest<AnimalShelt
 
     @Test
     public void should_not_store_relationship_fields_as_element_property() throws Exception {
-        AnimalShelter shelter = repository.save(new AnimalShelter(null, SHELTER_NAME, null, 1, Sets.newHashSet()));
+        AnimalShelter shelter = repository.save(new AnimalShelter(null, SHELTER_NAME, null, 1, Sets.newHashSet(), null));
 
         assertThat(repository.getGraph().v(shelter.getId()).property("inhabitants").isPresent(), equalTo(false));
     }
 
     @Override
     protected AnimalShelter createBean() {
-        return new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1, null);
+        return new AnimalShelter(null, SHELTER_NAME, "Street 1, City", 1, null, null);
     }
 
     @Override
